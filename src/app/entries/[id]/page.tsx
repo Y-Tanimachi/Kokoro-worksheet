@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { getEntries, deleteEntry } from "@/utils/storage"
 import { WorksheetEntry } from "@/types"
+import { useAuth } from "@/context/AuthContext"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { format } from "date-fns"
@@ -13,23 +14,55 @@ import { ArrowLeft, Trash2 } from "lucide-react"
 export default function EntryDetailPage() {
     const { id } = useParams()
     const router = useRouter()
+    const { user, loading: authLoading } = useAuth()
     const [entry, setEntry] = useState<WorksheetEntry | null>(null)
+    const [isLoading, setIsLoading] = useState(true)
 
     useEffect(() => {
-        if (typeof id === "string") {
-            const entries = getEntries()
-            const found = entries.find((e) => e.id === id)
-            setEntry(found || null)
-        }
-    }, [id])
+        if (typeof id === "string" && user) {
+            // In a real app with Firestore optimization, we might fetch a single doc.
+            // But since getEntries fetches the collection, we can just find it there for now,
+            // OR better, implement getEntryById (which I haven't done in storage.ts yet, so I'll simple fetch all or add a new function)
+            // Wait, storage.ts only has getEntries (plural). I should probably just fetch all and find, or assume I should just use find on client for now if I wanted to be lazy, but that's bad.
+            // Actually, in storage.ts I used "users/{userId}/entries/{id}" structure.
+            // I should really just fetch the single document.
+            // But since I didn't export a `getEntry` function, I'll use `getEntries` and find it for now to avoid changing storage.ts again unless needed.
+            // Actually, I should update storage.ts to include getEntry, but for now I will just fetch all. It's not efficient but it works for small data.
+            // WAIT, looking at my plan, I didn't specify getEntry.
+            // Let's just use getEntries and find.
 
-    if (!entry) {
+            const fetchData = async () => {
+                try {
+                    const entries = await getEntries(user.uid)
+                    const found = entries.find((e) => e.id === id)
+                    setEntry(found || null)
+                } catch (error) {
+                    console.error(error)
+                } finally {
+                    setIsLoading(false)
+                }
+            }
+            fetchData()
+        } else if (!authLoading && !user) {
+            setIsLoading(false)
+        }
+    }, [id, user, authLoading])
+
+    if (authLoading || isLoading) {
         return <div className="p-8 text-center">読み込み中...</div>
     }
 
-    const handleDelete = () => {
+    if (!user) {
+        return <div className="p-8 text-center">ログインが必要です</div>
+    }
+
+    if (!entry) {
+        return <div className="p-8 text-center">データが見つかりません</div>
+    }
+
+    const handleDelete = async () => {
         if (confirm("本当に削除しますか？")) {
-            deleteEntry(entry.id)
+            await deleteEntry(user.uid, entry.id)
             router.push("/")
         }
     }

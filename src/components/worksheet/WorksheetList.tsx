@@ -8,15 +8,55 @@ import { WorksheetEntry } from "@/types"
 import { format } from "date-fns"
 import { ja } from "date-fns/locale"
 import { Button } from "@/components/ui/button"
-import { Plus } from "lucide-react"
+import { Plus, Loader2 } from "lucide-react"
+import { useAuth } from "@/context/AuthContext"
 
 export function WorksheetList() {
     const [entries, setEntries] = useState<WorksheetEntry[]>([])
+    const [isLoading, setIsLoading] = useState(true)
     const router = useRouter()
+    const { user, loading: authLoading, signInWithGoogle } = useAuth()
 
     useEffect(() => {
-        setEntries(getEntries())
-    }, [])
+        const fetchEntries = async () => {
+            if (user) {
+                try {
+                    const data = await getEntries(user.uid)
+                    setEntries(data)
+                } catch (error) {
+                    console.error(error)
+                } finally {
+                    setIsLoading(false)
+                }
+            } else if (!authLoading) {
+                // Not logged in and auth check finished
+                setIsLoading(false)
+                setEntries([])
+            }
+        }
+
+        fetchEntries()
+    }, [user, authLoading])
+
+    if (authLoading || isLoading) {
+        return (
+            <div className="flex justify-center items-center py-20">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+        )
+    }
+
+    if (!user) {
+        return (
+            <div className="text-center py-10 space-y-4">
+                <h2 className="text-xl font-semibold">ログインが必要です</h2>
+                <p className="text-muted-foreground">データを保存・閲覧するにはログインしてください。</p>
+                <Button onClick={() => signInWithGoogle()}>
+                    Googleでログイン
+                </Button>
+            </div>
+        )
+    }
 
     if (entries.length === 0) {
         return (

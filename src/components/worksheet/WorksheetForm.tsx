@@ -10,7 +10,8 @@ import { Slider } from "@/components/ui/slider"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { saveEntry } from "@/utils/storage"
 import { WorksheetEntry, Emotion } from "@/types"
-import { Smile, Frown, Angry, Meh, Heart, Zap, HelpCircle } from "lucide-react"
+import { Smile, Frown, Angry, Meh, Heart, Zap, HelpCircle, Loader2 } from "lucide-react"
+import { useAuth } from "@/context/AuthContext"
 
 const EMOTIONS: { label: Emotion; icon: React.ReactNode; color: string }[] = [
     { label: "怒り", icon: <Angry className="w-6 h-6" />, color: "bg-red-100 dark:bg-red-900 border-red-200" },
@@ -24,7 +25,9 @@ const EMOTIONS: { label: Emotion; icon: React.ReactNode; color: string }[] = [
 
 export function WorksheetForm() {
     const router = useRouter()
+    const { user } = useAuth()
     const [step, setStep] = useState(1)
+    const [isSaving, setIsSaving] = useState(false)
     const [formData, setFormData] = useState<Partial<WorksheetEntry>>({
         createdAt: new Date().toISOString().slice(0, 16),
         emotionStrength: 5,
@@ -51,30 +54,44 @@ export function WorksheetForm() {
     const handleNext = () => setStep(step + 1)
     const handleBack = () => setStep(step - 1)
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!formData.trigger || !formData.emotions?.length) {
             alert("必須項目を入力してください")
             return
         }
 
-        const entry: WorksheetEntry = {
-            id: crypto.randomUUID(),
-            createdAt: formData.createdAt || new Date().toISOString(),
-            trigger: formData.trigger || "",
-            emotions: formData.emotions || [],
-            emotionStrength: formData.emotionStrength || 5,
-            automaticThought: formData.automaticThought || "",
-            alternativeThought: formData.alternativeThought || "",
-            reaction: formData.reaction || "",
-            reflection: formData.reflection || "",
-            nextStep: formData.nextStep || "",
-            praise: formData.praise || "",
+        if (!user) {
+            alert("保存するにはログインが必要です")
+            return
         }
 
-        saveEntry(entry)
-        // 完了メッセージ（自分を褒める）
-        alert("お疲れ様でした！自分の感情に向き合えたあなたは素晴らしいです！")
-        router.push("/")
+        setIsSaving(true)
+
+        try {
+            const entry: WorksheetEntry = {
+                id: crypto.randomUUID(),
+                createdAt: formData.createdAt || new Date().toISOString(),
+                trigger: formData.trigger || "",
+                emotions: formData.emotions || [],
+                emotionStrength: formData.emotionStrength || 5,
+                automaticThought: formData.automaticThought || "",
+                alternativeThought: formData.alternativeThought || "",
+                reaction: formData.reaction || "",
+                reflection: formData.reflection || "",
+                nextStep: formData.nextStep || "",
+                praise: formData.praise || "",
+            }
+
+            await saveEntry(user.uid, entry)
+            // 完了メッセージ（自分を褒める）
+            alert("お疲れ様でした！自分の感情に向き合えたあなたは素晴らしいです！")
+            router.push("/")
+        } catch (error) {
+            console.error(error)
+            alert("保存に失敗しました")
+        } finally {
+            setIsSaving(false)
+        }
     }
 
     return (
@@ -131,8 +148,8 @@ export function WorksheetForm() {
                                             key={e.label}
                                             onClick={() => handleEmotionToggle(e.label)}
                                             className={`p-3 rounded-xl border flex items-center space-x-2 transition-all ${formData.emotions?.includes(e.label)
-                                                    ? "ring-2 ring-primary bg-primary/10 border-primary"
-                                                    : "hover:bg-accent border-transparent bg-secondary/50"
+                                                ? "ring-2 ring-primary bg-primary/10 border-primary"
+                                                : "hover:bg-accent border-transparent bg-secondary/50"
                                                 }`}
                                         >
                                             {e.icon}
@@ -224,7 +241,8 @@ export function WorksheetForm() {
                     {step < 4 ? (
                         <Button onClick={handleNext}>次へ</Button>
                     ) : (
-                        <Button onClick={handleSubmit} className="w-32">
+                        <Button onClick={handleSubmit} className="w-32" disabled={isSaving}>
+                            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                             完了記録
                         </Button>
                     )}
