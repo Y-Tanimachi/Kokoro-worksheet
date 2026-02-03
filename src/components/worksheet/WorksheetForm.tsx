@@ -29,7 +29,8 @@ export function WorksheetForm() {
     const [step, setStep] = useState(1)
     const [isSaving, setIsSaving] = useState(false)
     const [formData, setFormData] = useState<Partial<WorksheetEntry>>({
-        createdAt: new Date().toISOString().slice(0, 16),
+        // JST (UTC+9) の日時をセット
+        createdAt: new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 16),
         emotionStrength: 5,
         emotions: [],
     })
