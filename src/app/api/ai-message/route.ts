@@ -6,7 +6,7 @@ import { FieldValue } from "firebase-admin/firestore";
 // Initialize Gemini
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 const model = genAI.getGenerativeModel({
-    model: "gemini-1.5-flash",
+    model: "gemini-2.0-flash",
     systemInstruction: `
 あなたは、感情整理ワークシートに取り組んだユーザーに対して、40文字以上70文字以内で、温かみのある応援メッセージを送るAIです。
 ユーザーの入力内容に基づき、共感し、肯定し、少し前向きになれるような言葉をかけてください。
