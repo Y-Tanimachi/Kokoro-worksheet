@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { format } from "date-fns"
 import { ja } from "date-fns/locale"
-import { ArrowLeft, Trash2 } from "lucide-react"
+import { ArrowLeft, Trash2, Bot } from "lucide-react"
 
 export default function EntryDetailPage() {
     const { id } = useParams()
@@ -102,6 +102,18 @@ export default function EntryDetailPage() {
                         <h4 className="text-sm font-bold text-primary mb-1">感謝・ポジティブメッセージ</h4>
                         <p>{entry.praise}</p>
                     </div>
+
+                    {entry.aiMessage && (
+                        <div className="mt-4 p-4 bg-primary/5 border border-primary/20 rounded-xl relative">
+                            <div className="absolute -top-3 left-4 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                                <Bot className="w-3 h-3" />
+                                <span>AIからの応援</span>
+                            </div>
+                            <p className="text-sm leading-relaxed pt-2">
+                                {entry.aiMessage}
+                            </p>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
 
@@ -110,7 +122,7 @@ export default function EntryDetailPage() {
                     <Trash2 className="mr-2 h-4 w-4" /> 削除する
                 </Button>
             </div>
-        </div>
+        </div >
     )
 }
 

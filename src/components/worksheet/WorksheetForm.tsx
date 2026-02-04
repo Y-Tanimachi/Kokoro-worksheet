@@ -100,6 +100,7 @@ export function WorksheetForm() {
             `
 
             // 3. Call AI API
+            let message = "";
             try {
                 const res = await fetch("/api/ai-message", {
                     method: "POST",
@@ -112,15 +113,26 @@ export function WorksheetForm() {
 
                 const data = await res.json();
                 if (data.message) {
-                    setAiMessage(data.message);
+                    message = data.message;
                 } else if (data.fallback) {
-                    setAiMessage(data.fallback);
+                    message = data.fallback;
                 } else {
-                    setAiMessage("よく頑張りましたね！");
+                    message = "よく頑張りましたね！";
                 }
             } catch (aiError) {
                 console.error("AI Generation Error:", aiError);
-                setAiMessage("感情に向き合えたことが、最初の一歩です。その調子で進んでいきましょう！");
+                message = "感情に向き合えたことが、最初の一歩です。その調子で進んでいきましょう！";
+            }
+
+            setAiMessage(message);
+
+            // 3.5 Save Entry again with AI Message
+            try {
+                const updatedEntry = { ...entry, aiMessage: message };
+                await saveEntry(user.uid, updatedEntry);
+            } catch (saveError) {
+                console.error("Error saving AI message:", saveError);
+                // Don't block user flow if this secondary save fails, main entry is already saved
             }
 
             // 4. Move to success screen

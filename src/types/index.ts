@@ -12,4 +12,5 @@ export interface WorksheetEntry {
     reflection: string;
     nextStep: string;
     praise: string;
+    aiMessage?: string;
 }
