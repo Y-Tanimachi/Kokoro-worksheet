@@ -10,7 +10,7 @@ import { Slider } from "@/components/ui/slider"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { saveEntry } from "@/utils/storage"
 import { WorksheetEntry, Emotion } from "@/types"
-import { Smile, Frown, Angry, Meh, Heart, Zap, HelpCircle, Loader2 } from "lucide-react"
+import { Smile, Frown, Angry, Meh, Heart, Zap, HelpCircle, Loader2, Bot, Sparkles } from "lucide-react"
 import { useAuth } from "@/context/AuthContext"
 
 const EMOTIONS: { label: Emotion; icon: React.ReactNode; color: string }[] = [
@@ -28,6 +28,7 @@ export function WorksheetForm() {
     const { user } = useAuth()
     const [step, setStep] = useState(1)
     const [isSaving, setIsSaving] = useState(false)
+    const [aiMessage, setAiMessage] = useState("")
     const [formData, setFormData] = useState<Partial<WorksheetEntry>>({
         // JST (UTC+9) の日時をセット
         createdAt: new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 16),
@@ -83,10 +84,48 @@ export function WorksheetForm() {
                 praise: formData.praise || "",
             }
 
+            // 1. Save Entry first
             await saveEntry(user.uid, entry)
-            // 完了メッセージ（自分を褒める）
-            alert("お疲れ様でした！自分の感情に向き合えたあなたは素晴らしいです！")
-            router.push("/")
+
+            // 2. Prepare data for AI
+            const contextForAI = `
+            状況: ${entry.trigger}
+            感情: ${entry.emotions.join(", ")} (強さ: ${entry.emotionStrength}/10)
+            自動思考: ${entry.automaticThought}
+            代替思考: ${entry.alternativeThought}
+            反応: ${entry.reaction}
+            反省: ${entry.reflection}
+            次のステップ: ${entry.nextStep}
+            自分への褒め言葉: ${entry.praise}
+            `
+
+            // 3. Call AI API
+            try {
+                const res = await fetch("/api/ai-message", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        userId: user.uid,
+                        userInput: contextForAI
+                    }),
+                });
+
+                const data = await res.json();
+                if (data.message) {
+                    setAiMessage(data.message);
+                } else if (data.fallback) {
+                    setAiMessage(data.fallback);
+                } else {
+                    setAiMessage("よく頑張りましたね！");
+                }
+            } catch (aiError) {
+                console.error("AI Generation Error:", aiError);
+                setAiMessage("感情に向き合えたことが、最初の一歩です。その調子で進んでいきましょう！");
+            }
+
+            // 4. Move to success screen
+            setStep(5)
+
         } catch (error) {
             console.error(error)
             alert("保存に失敗しました")
@@ -98,11 +137,11 @@ export function WorksheetForm() {
     return (
         <div className="max-w-md mx-auto p-4 space-y-6">
             <div className="flex justify-between items-center mb-4">
-                <span className="text-sm text-muted-foreground">Step {step} / 4</span>
+                <span className="text-sm text-muted-foreground">Step {step > 4 ? 4 : step} / 4</span>
                 <div className="h-2 flex-1 ml-4 bg-secondary rounded-full overflow-hidden">
                     <div
                         className="h-full bg-primary transition-all duration-300"
-                        style={{ width: `${(step / 4) * 100}%` }}
+                        style={{ width: `${(Math.min(step, 4) / 4) * 100}%` }}
                     />
                 </div>
             </div>
@@ -114,6 +153,7 @@ export function WorksheetForm() {
                         {step === 2 && "感情と向き合う"}
                         {step === 3 && "思考と行動"}
                         {step === 4 && "振り返りと感謝"}
+                        {step === 5 && "保存完了"}
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6 flex-1">
@@ -234,18 +274,56 @@ export function WorksheetForm() {
                             </div>
                         </>
                     )}
+
+                    {step === 5 && (
+                        <div className="flex flex-col items-center justify-center space-y-6 py-6 animate-in fade-in zoom-in duration-500">
+                            <div className="rounded-full bg-green-100 p-3 dark:bg-green-900">
+                                <Sparkles className="h-10 w-10 text-green-600 dark:text-green-400" />
+                            </div>
+                            <div className="text-center space-y-2">
+                                <h3 className="text-lg font-medium">作成しました！</h3>
+                                <p className="text-sm text-muted-foreground">自分の感情に向き合えたことは素晴らしい一歩です。</p>
+                            </div>
+
+                            {aiMessage && (
+                                <div className="w-full bg-primary/5 border border-primary/20 rounded-xl p-4 relative mt-4">
+                                    <div className="absolute -top-3 left-4 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                                        <Bot className="w-3 h-3" />
+                                        <span>AIからの応援</span>
+                                    </div>
+                                    <p className="text-sm leading-relaxed pt-2">
+                                        {aiMessage}
+                                    </p>
+                                </div>
+                            )}
+
+                        </div>
+                    )}
+
                 </CardContent>
                 <CardFooter className="flex justify-between border-t pt-4">
-                    <Button variant="ghost" onClick={handleBack} disabled={step === 1}>
-                        戻る
-                    </Button>
-                    {step < 4 ? (
-                        <Button onClick={handleNext}>次へ</Button>
-                    ) : (
-                        <Button onClick={handleSubmit} className="w-32" disabled={isSaving}>
-                            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                            完了記録
+                    {step === 5 ? (
+                        <Button onClick={() => router.push("/")} className="w-full">
+                            ホームへ戻る
                         </Button>
+                    ) : (
+                        <>
+                            <Button variant="ghost" onClick={handleBack} disabled={step === 1}>
+                                戻る
+                            </Button>
+                            {step < 4 ? (
+                                <Button onClick={handleNext}>次へ</Button>
+                            ) : (
+                                <Button onClick={handleSubmit} className="w-32" disabled={isSaving}>
+                                    {isSaving ? (
+                                        <>
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                            <span>AI思考中...</span>
+                                        </>
+                                    ) : "完了記録"}
+                                </Button>
+                            )}
+                        </>
                     )}
                 </CardFooter>
             </Card>
