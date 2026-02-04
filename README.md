@@ -1,37 +1,82 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
-
-## Getting Started
-
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 # Kokoro-worksheet
+自分の感情を整理するワークシートです。
+
+## 🎈「自分の感情を整理するワークシート」
+
+使い方
+
+1. 毎日または感情が高まった瞬間に起動でして記入する。
+2. 直感的に書き、後から読み返すことで自分の感情パターンが見えてくるようにする。
+3. 書いた後は「自分を褒める」ことを忘れずにメッセージを実装。
+4. 最後にAIからフィードバックメッセージがあります。
+
+---
+
+### 📅 ワークシート
+
+| 項目               | 内容             | 備考                    |
+| ---------------- | -------------- | --------------------- |
+| 1. 日付・時間         | 書いた日時          | 例：2026‑02‑02 18:15    |
+| 2. 何が起こったか（トリガー） | 具体的な出来事        | 「3歳がイヤイヤで洗濯物を落とさない」   |
+| 3. 感情            | 何を感じたか         | 怒り、疲労、無力感、愛情、など       |
+| 4. 感情の強さ         | 1–10のスケールで数値化  | 10＝最も強い、1＝ほとんど感じない    |
+| 5. 思考（自動思考）      | その感情を引き起こした思考  | 「どうして子どもは私を無視するんだろう？」 |
+| 6. 代替思考          | より建設的な考え方      | 「子どもはまだ選択の方法を学んでいる」   |
+| 7. 反応            | 行動・言動          | 「大声で叱った」「黙って立ち去った」    |
+| 8. 反省・学び         | 何が良かったか／悪かったか  | 「叱る前に一呼吸」             |
+| 9. 次に試すこと        | 改善策や実行プラン      | 「イヤイヤの前に小さな選択肢を与える」   |
+| 10. 感謝/褒めるポイント   | 今日の自分に対するポジティブ | 「子どもと一緒に食事を作った」       |
+
+---
+
+### 📌使い方のヒント
+
+|ステップ|具体例|目的|
+|---|---|---|
+|① まずは書く|気にせず全て書き出す。|「感情の流れを可視化」|
+|② 感情を数値化|10点満点で評価。|感情の強度を客観化|
+|③ 思考を分解|「私は何を考えている？」を自問。|「自動思考」に気づく|
+|④ 代替思考を作る|「私はこうも考えられる」形で書く。|ネガティブ思考をポジティブへ|
+|⑤ 行動を振り返る|「私は何をした？」を正直に。|行動のトレース|
+|⑥ 学びを抽出|「何が改善できたか？」を書く。|成長ポイントを探す|
+|⑦ 行動計画|「次回はこうする」と具体化。|次に活かす|
+
+---
+
+## 🔍 サンプル記入例（想定シーン：イヤイヤ）
+
+|項目|記入例|
+|---|---|
+|1. 日付・時間|2026‑02‑02 18:15|
+|2. トリガー|3歳が「イヤイヤ」で洗濯物を落とさない|
+|3. 感情|怒り、疲労、無力感|
+|4. 感情の強さ|8|
+|5. 思考（自動思考）|「子どもは私を無視している。どうしていつもこうなの？」|
+|6. 代替思考|「子どもはまだ選択方法を学んでいる。私の声は大事だが、選択肢を与えてあげるべき」|
+|7. 反応|叱鳴る（大声で）|
+|8. 反省・学び|叱る前に深呼吸ができず、相手の気持ちを把握できていない。|
+|9. 次に試すこと|「洗濯物を置く場所を決めて、赤・青・緑の3色から選んでもらう」|
+|10. 感謝/褒めるポイント|子どもがやった「片付けた部分」を褒め、笑顔で一緒に写真を撮った。|
+
+---
+
+## 📌 もっと使いやすくするためのアイデア
+
+| 変化点     | 目的          | 具体例                           |
+| ------- | ----------- | ----------------------------- |
+| 色分け     | 視覚的に感情を整理   | 感情項目を赤（怒り）・青（悲しみ）・黄（喜び）などに色付け |
+| 箇条書きにする | 書く負担を減らす    | 代替思考を簡単な3文でまとめる               |
+| 記入タイム   | 継続しやすくする    | 毎晩寝る前10分間を固定                  |
+| 振り返り    | 長期的なパターンを発見 | 毎週金曜にその週の記録を総括し、トレンドを確認       |
+
+---
+
+### 🎉 最後に
+
+感情整理は「自分を責める」ためではなく、「自分を知る」ためのツールです。
+
+- 書き込む際は、言葉に「正解」「間違い」はありません。
+- 何度も書くうちに、同じようなパターンや反応が見えてきます。
+- その発見が、次にどのように対処するかのヒントになります。
+
+さあ、今日は「自分の感情」スキャンを始めてみましょう！
