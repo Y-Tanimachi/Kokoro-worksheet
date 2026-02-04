@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { WorksheetList } from "@/components/worksheet/WorksheetList"
+import { WeeklyAnalytics } from "@/components/analytics/WeeklyAnalytics"
 import { Plus } from "lucide-react"
 
 export default function Home() {
@@ -16,6 +17,7 @@ export default function Home() {
         </Button>
       </div>
 
+      <WeeklyAnalytics />
       <WorksheetList />
     </div>
   )

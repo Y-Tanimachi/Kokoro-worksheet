@@ -1,9 +1,9 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { getEntries } from "@/utils/storage"
+// import { getEntries } from "@/utils/storage" // Removed
+import { useWorksheetEntries } from "@/hooks/useWorksheetEntries"
 import { WorksheetEntry } from "@/types"
 import { format } from "date-fns"
 import { ja } from "date-fns/locale"
@@ -12,31 +12,9 @@ import { Plus, Loader2 } from "lucide-react"
 import { useAuth } from "@/context/AuthContext"
 
 export function WorksheetList() {
-    const [entries, setEntries] = useState<WorksheetEntry[]>([])
-    const [isLoading, setIsLoading] = useState(true)
     const router = useRouter()
     const { user, loading: authLoading, signInWithGoogle } = useAuth()
-
-    useEffect(() => {
-        const fetchEntries = async () => {
-            if (user) {
-                try {
-                    const data = await getEntries(user.uid)
-                    setEntries(data)
-                } catch (error) {
-                    console.error(error)
-                } finally {
-                    setIsLoading(false)
-                }
-            } else if (!authLoading) {
-                // Not logged in and auth check finished
-                setIsLoading(false)
-                setEntries([])
-            }
-        }
-
-        fetchEntries()
-    }, [user, authLoading])
+    const { entries, isLoading } = useWorksheetEntries()
 
     if (authLoading || isLoading) {
         return (
