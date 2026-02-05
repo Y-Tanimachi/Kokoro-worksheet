@@ -44,8 +44,8 @@ const safetySettings = [
 const FALLBACK_MESSAGE = "感情に向き合えたことが、最初の一歩です。その調子で進んでいきましょう！";
 
 // Rate limits
-const HOURLY_LIMIT = 5;
-const DAILY_LIMIT = 50;
+const HOURLY_LIMIT = 20;
+const DAILY_LIMIT = 100;
 
 export async function POST(req: NextRequest) {
     try {
