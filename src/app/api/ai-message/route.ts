@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
-import { adminDb } from "@/utils/firebase-admin";
+import { adminDb, adminAuth } from "@/utils/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
 
 // Initialize Gemini
@@ -49,7 +49,23 @@ const DAILY_LIMIT = 100;
 
 export async function POST(req: NextRequest) {
     try {
-        const { userId, userInput } = await req.json();
+        const authHeader = req.headers.get("Authorization");
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const idToken = authHeader.split("Bearer ")[1];
+        let userId: string;
+
+        try {
+            const decodedToken = await adminAuth.verifyIdToken(idToken);
+            userId = decodedToken.uid;
+        } catch (error) {
+            console.error("Token verification failed:", error);
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const { userInput } = await req.json();
 
         if (!userId) {
             return NextResponse.json({ error: "User ID is required" }, { status: 400 });

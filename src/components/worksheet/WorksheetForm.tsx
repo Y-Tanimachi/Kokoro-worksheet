@@ -102,11 +102,14 @@ export function WorksheetForm() {
             // 3. Call AI API
             let message = "";
             try {
+                const idToken = await user.getIdToken();
                 const res = await fetch("/api/ai-message", {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${idToken}`
+                    },
                     body: JSON.stringify({
-                        userId: user.uid,
                         userInput: contextForAI
                     }),
                 });
