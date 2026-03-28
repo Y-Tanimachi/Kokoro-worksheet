@@ -65,13 +65,10 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const { userInput } = await req.json();
+        const body = await req.json();
+        const { userInput } = body;
 
-        if (!userId) {
-            return NextResponse.json({ error: "User ID is required" }, { status: 400 });
-        }
-
-        if (!userInput || userInput.length > 500) {
+        if (typeof userInput !== "string" || userInput.trim().length === 0 || userInput.length > 500) {
             return NextResponse.json({ error: "Invalid input" }, { status: 400 });
         }
 
