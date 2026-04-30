@@ -11,6 +11,8 @@ import { Button } from "@/components/ui/button"
 import { Plus, Loader2 } from "lucide-react"
 import { useAuth } from "@/context/AuthContext"
 
+// ホーム画面に表示するワークシート一覧
+// 未ログイン・空・ローディング の3状態をそれぞれ専用UIで表示する
 export function WorksheetList() {
     const router = useRouter()
     const { user, loading: authLoading, signInWithGoogle } = useAuth()
@@ -64,6 +66,7 @@ export function WorksheetList() {
                                 </CardDescription>
                             </div>
                             <div className="flex space-x-1">
+                                {/* 感情タグは最大3つ表示し、4つ以上は "..." で省略 */}
                                 {entry.emotions.slice(0, 3).map((e) => (
                                     <span key={e} className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary">
                                         {e}

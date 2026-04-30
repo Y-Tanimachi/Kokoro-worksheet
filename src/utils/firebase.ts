@@ -2,6 +2,7 @@ import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
+// Firebaseプロジェクトの接続情報（クライアント向け。公開されても問題ない値）
 const firebaseConfig = {
     apiKey: "AIzaSyADr1-p8l2kJfMGQiAjwYomxFoi4Ab_drI",
     authDomain: "kokoro-worksheet.firebaseapp.com",
@@ -12,5 +13,6 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+// ブラウザ（クライアントサイド）で使うAuth / Firestoreインスタンス
 export const auth = getAuth(app);
 export const db = getFirestore(app);

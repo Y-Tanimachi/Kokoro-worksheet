@@ -6,9 +6,12 @@ import { getWeeklyStats, getDominantEmotion } from "@/utils/statistics";
 import { useWorksheetEntries } from "@/hooks/useWorksheetEntries";
 import { Loader2, TrendingUp } from "lucide-react";
 
+// 今週（月〜日）の感情集計を表示するウィジェット
+// 未ログイン・エントリなし・ローディング中はそれぞれ異なる表示を返す
 export function WeeklyAnalytics() {
     const { entries, isLoading, user } = useWorksheetEntries();
 
+    // entries が変化した時だけ統計を再計算（毎レンダリングの重複計算を避ける）
     const { weeklyStats, dominantEmotion } = useMemo(() => {
         if (!entries || entries.length === 0) {
             return { weeklyStats: [], dominantEmotion: null };
@@ -71,6 +74,8 @@ export function WeeklyAnalytics() {
                                 <div className="flex-1 mx-3 h-2 bg-secondary rounded-full overflow-hidden">
                                     <div
                                         className="h-full bg-primary/70 rounded-full"
+                                        // バーの幅 = 各感情スコア ÷ 最大スコア（dominantEmotion）× 100%
+                                        // dominantEmotionを基準にするため最大スコアのバーが必ず100%幅になる
                                         style={{ width: `${(stat.score / (dominantEmotion?.score || 1)) * 100}%` }}
                                     />
                                 </div>

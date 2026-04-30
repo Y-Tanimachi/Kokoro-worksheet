@@ -30,9 +30,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-background text-foreground`}
       >
+        {/* AuthProvider を最上位に配置し、全ページで useAuth() が使えるようにする */}
         <AuthProvider>
           <Header />
           <main>{children}</main>
+          {/* Vercel Analytics: ページビューを自動計測 */}
           <Analytics />
         </AuthProvider>
       </body>

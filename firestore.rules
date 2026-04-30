@@ -1,10 +1,12 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // ユーザーデータ: 自分のドキュメントのみ読み書き可能（他ユーザーのデータへはアクセス不可）
     match /users/{userId}/{document=**} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
-    // レートリミット用コレクション: 書き込みはサーバーサイド(Admin SDK)のみ
+    // レートリミット用コレクション: クライアントからの直接アクセスを完全に禁止し、
+    // サーバーサイド（Admin SDK 経由の /api/ai-message）のみが書き込める
     match /user_limits/{userId} {
       allow read, write: if false;
     }

@@ -1,11 +1,14 @@
 import { WorksheetEntry, Emotion } from "@/types";
 import { startOfWeek, endOfWeek, isWithinInterval } from "date-fns";
 
+// 統計で扱う感情の並び順（WorksheetFormの表示順と揃えている）
 const EMOTIONS: Emotion[] = ["怒り", "悲しみ", "喜び", "不安", "疲労", "無力感", "愛情", "その他"];
 
 export interface EmotionStat {
     emotion: Emotion;
+    // score: 同じ感情のエントリの emotionStrength 合計値（出現回数×強さ）
     score: number;
+    // count: その感情が記録された回数
     count: number;
 }
 

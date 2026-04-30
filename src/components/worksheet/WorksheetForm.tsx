@@ -13,6 +13,7 @@ import { WorksheetEntry, Emotion } from "@/types"
 import { Smile, Frown, Angry, Meh, Heart, Zap, HelpCircle, Loader2, Bot, Sparkles } from "lucide-react"
 import { useAuth } from "@/context/AuthContext"
 
+// 感情選択ボタンの表示定義（アイコン・色をまとめて管理）
 const EMOTIONS: { label: Emotion; icon: React.ReactNode; color: string }[] = [
     { label: "怒り", icon: <Angry className="w-6 h-6" />, color: "bg-red-100 dark:bg-red-900 border-red-200" },
     { label: "悲しみ", icon: <Frown className="w-6 h-6" />, color: "bg-blue-100 dark:bg-blue-900 border-blue-200" },
@@ -23,6 +24,8 @@ const EMOTIONS: { label: Emotion; icon: React.ReactNode; color: string }[] = [
     { label: "愛情", icon: <Heart className="w-6 h-6" />, color: "bg-pink-100 dark:bg-pink-900 border-pink-200" },
 ]
 
+// CBTワークシートを4ステップで入力するフォームコンポーネント
+// step 1〜4: 入力ステップ / step 5: 完了画面（AIメッセージ表示）
 export function WorksheetForm() {
     const router = useRouter()
     const { user } = useAuth()
@@ -30,7 +33,7 @@ export function WorksheetForm() {
     const [isSaving, setIsSaving] = useState(false)
     const [aiMessage, setAiMessage] = useState("")
     const [formData, setFormData] = useState<Partial<WorksheetEntry>>({
-        // JST (UTC+9) の日時をセット
+        // datetime-local inputに渡すためJSTオフセット(+9h)を加算した上でミリ秒を切り捨てる
         createdAt: new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 16),
         emotionStrength: 5,
         emotions: [],
@@ -40,6 +43,7 @@ export function WorksheetForm() {
         setFormData((prev) => ({ ...prev, [field]: value }))
     }
 
+    // 感情ボタンはトグル式（選択済みなら外す、未選択なら追加）
     const handleEmotionToggle = (emotion: Emotion) => {
         setFormData((prev) => {
             const current = prev.emotions || []
@@ -57,6 +61,7 @@ export function WorksheetForm() {
     const handleBack = () => setStep(step - 1)
 
     const handleSubmit = async () => {
+        // trigger と emotions は必須項目
         if (!formData.trigger || !formData.emotions?.length) {
             alert("必須項目を入力してください")
             return
@@ -71,7 +76,7 @@ export function WorksheetForm() {
 
         try {
             const entry: WorksheetEntry = {
-                id: crypto.randomUUID(),
+                id: crypto.randomUUID(),  // ブラウザ標準APIでUUIDを生成
                 createdAt: formData.createdAt || new Date().toISOString(),
                 trigger: formData.trigger || "",
                 emotions: formData.emotions || [],
@@ -84,10 +89,10 @@ export function WorksheetForm() {
                 praise: formData.praise || "",
             }
 
-            // 1. Save Entry first
+            // 1. まずエントリをFirestoreに保存（AIが失敗しても記録が残るように先に保存）
             await saveEntry(user.uid, entry)
 
-            // 2. Prepare data for AI
+            // 2. AIへ送るプロンプトコンテキストをワークシートの内容から構築
             const contextForAI = `
             状況: ${entry.trigger}
             感情: ${entry.emotions.join(", ")} (強さ: ${entry.emotionStrength}/10)
@@ -99,7 +104,7 @@ export function WorksheetForm() {
             自分への褒め言葉: ${entry.praise}
             `
 
-            // 3. Call AI API
+            // 3. AIメッセージAPIを呼び出す。Authorization ヘッダーでFirebase IDトークンを渡し、サーバー側で認証する
             let message = "";
             try {
                 const idToken = await user.getIdToken();
@@ -115,6 +120,7 @@ export function WorksheetForm() {
                 });
 
                 const data = await res.json();
+                // message: 正常生成 / fallback: レートリミット時のデフォルト文
                 if (data.message) {
                     message = data.message;
                 } else if (data.fallback) {
@@ -123,22 +129,23 @@ export function WorksheetForm() {
                     message = "よく頑張りましたね！";
                 }
             } catch (aiError) {
+                // AI呼び出し失敗時はフォールバックメッセージを使い、ユーザーの保存フローは止めない
                 console.error("AI Generation Error:", aiError);
                 message = "感情に向き合えたことが、最初の一歩です。その調子で進んでいきましょう！";
             }
 
             setAiMessage(message);
 
-            // 3.5 Save Entry again with AI Message
+            // 3.5 AIメッセージを付加して再保存（aiMessage フィールドを追記）
+            // この保存が失敗しても最初の保存（AIメッセージなし）は既に完了しているのでエラーは無視する
             try {
                 const updatedEntry = { ...entry, aiMessage: message };
                 await saveEntry(user.uid, updatedEntry);
             } catch (saveError) {
                 console.error("Error saving AI message:", saveError);
-                // Don't block user flow if this secondary save fails, main entry is already saved
             }
 
-            // 4. Move to success screen
+            // 4. 完了画面（step 5）へ移行
             setStep(5)
 
         } catch (error) {

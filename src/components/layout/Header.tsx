@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
+// 全ページ共通のスティッキーヘッダー
+// ログイン状態に応じてアバタードロップダウン or ログインボタンを切り替える
 export function Header() {
     const { user, signInWithGoogle, signOut } = useAuth()
 

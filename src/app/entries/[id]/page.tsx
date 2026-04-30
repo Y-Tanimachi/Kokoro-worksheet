@@ -20,17 +20,8 @@ export default function EntryDetailPage() {
 
     useEffect(() => {
         if (typeof id === "string" && user) {
-            // In a real app with Firestore optimization, we might fetch a single doc.
-            // But since getEntries fetches the collection, we can just find it there for now,
-            // OR better, implement getEntryById (which I haven't done in storage.ts yet, so I'll simple fetch all or add a new function)
-            // Wait, storage.ts only has getEntries (plural). I should probably just fetch all and find, or assume I should just use find on client for now if I wanted to be lazy, but that's bad.
-            // Actually, in storage.ts I used "users/{userId}/entries/{id}" structure.
-            // I should really just fetch the single document.
-            // But since I didn't export a `getEntry` function, I'll use `getEntries` and find it for now to avoid changing storage.ts again unless needed.
-            // Actually, I should update storage.ts to include getEntry, but for now I will just fetch all. It's not efficient but it works for small data.
-            // WAIT, looking at my plan, I didn't specify getEntry.
-            // Let's just use getEntries and find.
-
+            // storage.ts に単一ドキュメント取得関数(getEntry)がないため、
+            // 全件取得してクライアント側でIDを絞り込む。データ量が少ない前提の簡易実装
             const fetchData = async () => {
                 try {
                     const entries = await getEntries(user.uid)
@@ -44,6 +35,7 @@ export default function EntryDetailPage() {
             }
             fetchData()
         } else if (!authLoading && !user) {
+            // 認証チェック完了後にもユーザーがなければ未ログイン確定
             setIsLoading(false)
         }
     }, [id, user, authLoading])
