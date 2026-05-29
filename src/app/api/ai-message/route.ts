@@ -83,56 +83,68 @@ export async function POST(req: NextRequest) {
 
         // --- レートリミット判定 ---
         // user_limits/{userId} にカウンターを保存。Firestoreルールでクライアントからの直接書き込みを禁止し、
-        // このAPI経由（Admin SDK）でのみ更新できるようにしている
+        // このAPI経由（Admin SDK）でのみ更新できるようにしている。
+        //
+        // 「読み取り→判定→書き込み」をトランザクションで原子化し、同一ユーザーの並行リクエストが
+        // 同じカウンタ値を読んで上限チェックをすり抜ける競合状態（コスト枯渇攻撃）を防ぐ。
         const userLimitRef = adminDb.collection("user_limits").doc(userId);
-        const userLimitSnap = await userLimitRef.get();
         const now = new Date();
 
-        let hourlyCount = 0;
-        let dailyCount = 0;
-        let lastHourlyReset = now;
-        let lastDailyReset = now;
+        const rateLimitOk = await adminDb.runTransaction(async (tx) => {
+            const userLimitSnap = await tx.get(userLimitRef);
 
-        if (userLimitSnap.exists) {
-            const data = userLimitSnap.data();
-            if (data) {
-                const lastHourly = data.lastHourlyReset?.toDate() || now;
-                const lastDaily = data.lastDailyReset?.toDate() || now;
+            let hourlyCount = 0;
+            let dailyCount = 0;
+            let lastHourlyReset = now;
+            let lastDailyReset = now;
 
-                // 最終リセットから1時間以上経過していればカウンターをリセット
-                if (now.getTime() - lastHourly.getTime() > 60 * 60 * 1000) {
-                    hourlyCount = 0;
-                    lastHourlyReset = now;
-                } else {
-                    hourlyCount = data.hourlyCount || 0;
-                    lastHourlyReset = lastHourly;
-                }
+            if (userLimitSnap.exists) {
+                const data = userLimitSnap.data();
+                if (data) {
+                    const lastHourly = data.lastHourlyReset?.toDate() || now;
+                    const lastDaily = data.lastDailyReset?.toDate() || now;
 
-                // 最終リセットから24時間以上経過していればカウンターをリセット
-                if (now.getTime() - lastDaily.getTime() > 24 * 60 * 60 * 1000) {
-                    dailyCount = 0;
-                    lastDailyReset = now;
-                } else {
-                    dailyCount = data.dailyCount || 0;
-                    lastDailyReset = lastDaily;
+                    // 最終リセットから1時間以上経過していればカウンターをリセット
+                    if (now.getTime() - lastHourly.getTime() > 60 * 60 * 1000) {
+                        hourlyCount = 0;
+                        lastHourlyReset = now;
+                    } else {
+                        hourlyCount = data.hourlyCount || 0;
+                        lastHourlyReset = lastHourly;
+                    }
+
+                    // 最終リセットから24時間以上経過していればカウンターをリセット
+                    if (now.getTime() - lastDaily.getTime() > 24 * 60 * 60 * 1000) {
+                        dailyCount = 0;
+                        lastDailyReset = now;
+                    } else {
+                        dailyCount = data.dailyCount || 0;
+                        lastDailyReset = lastDaily;
+                    }
                 }
             }
-        }
 
-        if (hourlyCount >= HOURLY_LIMIT || dailyCount >= DAILY_LIMIT) {
+            if (hourlyCount >= HOURLY_LIMIT || dailyCount >= DAILY_LIMIT) {
+                return false;
+            }
+
+            // カウンターをインクリメント（merge: true で他のフィールドを上書きしない）
+            tx.set(userLimitRef, {
+                hourlyCount: hourlyCount + 1,
+                dailyCount: dailyCount + 1,
+                lastHourlyReset,
+                lastDailyReset,
+                updatedAt: FieldValue.serverTimestamp()
+            }, { merge: true });
+
+            return true;
+        });
+
+        if (!rateLimitOk) {
             console.warn(`Rate limit exceeded for user ${userId}`);
             // レートリミット超過時はフォールバックメッセージをクライアントに返す（UXを損なわないため）
             return NextResponse.json({ error: "Rate limit exceeded", fallback: FALLBACK_MESSAGE }, { status: 429 });
         }
-
-        // カウンターをインクリメント（merge: true で他のフィールドを上書きしない）
-        await userLimitRef.set({
-            hourlyCount: hourlyCount + 1,
-            dailyCount: dailyCount + 1,
-            lastHourlyReset,
-            lastDailyReset,
-            updatedAt: FieldValue.serverTimestamp()
-        }, { merge: true });
 
         // --- Gemini API 呼び出し ---
         // ユーザー入力を "###" デリミタで囲み、プロンプトインジェクション攻撃を緩和する
