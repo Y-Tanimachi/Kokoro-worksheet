@@ -10,5 +10,10 @@ service cloud.firestore {
     match /user_limits/{userId} {
       allow read, write: if false;
     }
+    // 通知設定: 自分の設定ドキュメントのみ読み書き可能
+    // クロンジョブは Admin SDK 経由でアクセスするためルールを bypass する
+    match /user_settings/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
   }
 }
