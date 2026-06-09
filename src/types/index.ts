@@ -1,6 +1,13 @@
 // CBT（認知行動療法）ワークシートで扱う感情の種類
 export type Emotion = "怒り" | "悲しみ" | "喜び" | "不安" | "疲労" | "無力感" | "愛情" | "その他";
 
+// Firestore の user_settings/{userId} に保存される通知設定
+export interface UserSettings {
+    notificationsEnabled: boolean;
+    fcmToken: string | null;
+    updatedAt?: unknown; // Firestore Timestamp（クライアント側では直接参照しない）
+}
+
 // 1件のワークシート記録。Firestoreの users/{userId}/entries/{id} に保存される
 export interface WorksheetEntry {
     id: string;

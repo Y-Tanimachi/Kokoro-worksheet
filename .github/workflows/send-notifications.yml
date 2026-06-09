@@ -1,0 +1,18 @@
+name: Send Daily Reminders
+
+on:
+  schedule:
+    # 12:00 JST = 03:00 UTC
+    - cron: "0 3 * * *"
+    # 18:00 JST = 09:00 UTC
+    - cron: "0 9 * * *"
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send notification to users without today's entry
+        run: |
+          curl -sf -X POST "${{ secrets.APP_URL }}/api/notifications/send" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json"

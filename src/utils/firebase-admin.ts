@@ -2,6 +2,7 @@
 import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
+import { getMessaging } from "firebase-admin/messaging";
 
 // サービスアカウントの認証情報は環境変数から取得
 // FIREBASE_PRIVATE_KEY は改行が "\n" リテラルで格納されるため実際の改行文字に置換する
@@ -18,6 +19,7 @@ if (!getApps().length) {
     });
 }
 
-// サーバーサイドで Firestore / Auth を操作するための管理者権限インスタンス
+// サーバーサイドで Firestore / Auth / Messaging を操作するための管理者権限インスタンス
 export const adminDb = getFirestore();
 export const adminAuth = getAuth();
+export const adminMessaging = getMessaging();

@@ -1,11 +1,12 @@
 "use client"
 
 import Link from "next/link"
-import { Heart, LogIn, LogOut, User } from "lucide-react"
+import { Bell, Heart, LogIn, LogOut } from "lucide-react"
 import { useAuth } from "@/context/AuthContext"
 import { Button } from "@/components/ui/button"
 import {
     DropdownMenu,
+    DropdownMenuCheckboxItem,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuLabel,
@@ -13,11 +14,13 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useNotificationSettings } from "@/hooks/useNotificationSettings"
 
 // 全ページ共通のスティッキーヘッダー
 // ログイン状態に応じてアバタードロップダウン or ログインボタンを切り替える
 export function Header() {
     const { user, signInWithGoogle, signOut } = useAuth()
+    const { enabled: notificationsEnabled, loading: notifLoading, toggle: toggleNotification } = useNotificationSettings()
 
     return (
         <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md">
@@ -47,6 +50,16 @@ export function Header() {
                                         </p>
                                     </div>
                                 </DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuCheckboxItem
+                                    checked={notificationsEnabled}
+                                    disabled={notifLoading}
+                                    onCheckedChange={() => toggleNotification()}
+                                    onSelect={(e) => e.preventDefault()}
+                                >
+                                    <Bell className="mr-2 h-4 w-4" />
+                                    <span>記録リマインダー</span>
+                                </DropdownMenuCheckboxItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem onClick={() => signOut()}>
                                     <LogOut className="mr-2 h-4 w-4" />
