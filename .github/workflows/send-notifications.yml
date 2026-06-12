@@ -13,6 +13,6 @@ jobs:
     steps:
       - name: Send notification to users without today's entry
         run: |
-          curl -sf -X POST "${{ secrets.APP_URL }}/api/notifications/send" \
+          curl -sS -w "\nHTTP_STATUS:%{http_code}" -X POST "${{ secrets.APP_URL }}/api/notifications/send" \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
             -H "Content-Type: application/json"
