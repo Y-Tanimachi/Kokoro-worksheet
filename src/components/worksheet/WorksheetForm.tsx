@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { saveEntry } from "@/utils/storage"
+import { toDatetimeLocalJST } from "@/utils/date"
 import { WorksheetEntry, Emotion } from "@/types"
 import { Smile, Frown, Angry, Meh, Heart, Zap, HelpCircle, Loader2, Bot, Sparkles } from "lucide-react"
 import { useAuth } from "@/context/AuthContext"
@@ -33,13 +34,24 @@ export function WorksheetForm() {
     const [isSaving, setIsSaving] = useState(false)
     const [aiMessage, setAiMessage] = useState("")
     const [formData, setFormData] = useState<Partial<WorksheetEntry>>({
-        // datetime-local inputに渡すためJSTオフセット(+9h)を加算した上でミリ秒を切り捨てる
-        createdAt: new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 16),
+        // datetime-local input へ渡す JST の現在時刻（YYYY-MM-DDTHH:MM）
+        createdAt: toDatetimeLocalJST(),
         emotionStrength: 5,
         emotions: [],
+        // テキスト系フィールドは "" で初期化する。undefined のまま value に渡すと
+        // React の controlled/uncontrolled 切り替え警告が出るため。
+        trigger: "",
+        automaticThought: "",
+        alternativeThought: "",
+        reaction: "",
+        reflection: "",
+        nextStep: "",
+        praise: "",
     })
 
-    const handleChange = (field: keyof WorksheetEntry, value: any) => {
+    // テキスト入力(string)と感情の強さスライダー(number)の両方から呼ばれる。
+    // 感情の複数選択は handleEmotionToggle が別途扱う。
+    const handleChange = (field: keyof WorksheetEntry, value: string | number) => {
         setFormData((prev) => ({ ...prev, [field]: value }))
     }
 
@@ -59,6 +71,15 @@ export function WorksheetForm() {
 
     const handleNext = () => setStep(step + 1)
     const handleBack = () => setStep(step - 1)
+
+    // 現在のステップで必須項目が満たされているか。
+    // 必須はステップ1の「トリガー」とステップ2の「感情」。満たすまで「次へ」を無効化し、
+    // 全項目入力後に差し戻される体験を避ける。
+    const canProceed = () => {
+        if (step === 1) return !!formData.trigger?.trim()
+        if (step === 2) return (formData.emotions?.length ?? 0) > 0
+        return true
+    }
 
     const handleSubmit = async () => {
         // trigger と emotions は必須項目
@@ -92,17 +113,19 @@ export function WorksheetForm() {
             // 1. まずエントリをFirestoreに保存（AIが失敗しても記録が残るように先に保存）
             await saveEntry(user.uid, entry)
 
-            // 2. AIへ送るプロンプトコンテキストをワークシートの内容から構築
-            const contextForAI = `
-            状況: ${entry.trigger}
-            感情: ${entry.emotions.join(", ")} (強さ: ${entry.emotionStrength}/10)
-            自動思考: ${entry.automaticThought}
-            代替思考: ${entry.alternativeThought}
-            反応: ${entry.reaction}
-            反省: ${entry.reflection}
-            次のステップ: ${entry.nextStep}
-            自分への褒め言葉: ${entry.praise}
-            `
+            // 2. AIへ送るプロンプトコンテキストをワークシートの内容から構築。
+            // 行頭インデントを入れると無駄に文字数を消費し、サーバー側の入力上限を圧迫するため
+            // インデントなしで組み立てる。
+            const contextForAI = [
+                `状況: ${entry.trigger}`,
+                `感情: ${entry.emotions.join(", ")} (強さ: ${entry.emotionStrength}/10)`,
+                `自動思考: ${entry.automaticThought}`,
+                `代替思考: ${entry.alternativeThought}`,
+                `反応: ${entry.reaction}`,
+                `反省: ${entry.reflection}`,
+                `次のステップ: ${entry.nextStep}`,
+                `自分への褒め言葉: ${entry.praise}`,
+            ].join("\n")
 
             // 3. AIメッセージAPIを呼び出す。Authorization ヘッダーでFirebase IDトークンを渡し、サーバー側で認証する
             let message = "";
@@ -334,7 +357,7 @@ export function WorksheetForm() {
                                 戻る
                             </Button>
                             {step < 4 ? (
-                                <Button onClick={handleNext}>次へ</Button>
+                                <Button onClick={handleNext} disabled={!canProceed()}>次へ</Button>
                             ) : (
                                 <Button onClick={handleSubmit} className="w-32" disabled={isSaving}>
                                     {isSaving ? (

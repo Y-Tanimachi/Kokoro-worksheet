@@ -4,6 +4,7 @@ import {
     collection,
     doc,
     setDoc,
+    getDoc,
     getDocs,
     deleteDoc,
     query,
@@ -27,6 +28,20 @@ export const getEntries = async (userId: string): Promise<WorksheetEntry[]> => {
     } catch (error) {
         console.error("Error getting entries:", error);
         return [];
+    }
+};
+
+// 指定IDのエントリを1件だけ取得する。詳細ページで全件取得を避けるために使う
+export const getEntry = async (userId: string, id: string): Promise<WorksheetEntry | null> => {
+    if (!userId || !id) return null;
+
+    try {
+        const entryRef = doc(db, "users", userId, "entries", id);
+        const snap = await getDoc(entryRef);
+        return snap.exists() ? (snap.data() as WorksheetEntry) : null;
+    } catch (error) {
+        console.error("Error getting entry:", error);
+        return null;
     }
 };
 
