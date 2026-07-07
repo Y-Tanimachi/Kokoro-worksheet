@@ -13,7 +13,25 @@ service cloud.firestore {
     // 通知設定: 自分の設定ドキュメントのみ読み書き可能
     // クロンジョブは Admin SDK 経由でアクセスするためルールを bypass する
     match /user_settings/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      // クライアントは setDoc(merge: true) の部分更新で書き込むため、
+      // request.resource.data は「マージ後のドキュメント全体」になる。
+      // フィールドの存在は前提にせず「存在するなら型が正しい」形で検証する。
+      // 想定外のフィールドや型を書き込まれても通知 API 側は壊れない設計だが、
+      // 多層防御としてスキーマをルールでも強制する。
+      function isValidSettings() {
+        let data = request.resource.data;
+        return data.keys().hasOnly(['notificationsEnabled', 'fcmToken', 'updatedAt'])
+          && (!('notificationsEnabled' in data) || data.notificationsEnabled is bool)
+          && (!('fcmToken' in data)
+              || data.fcmToken == null
+              || (data.fcmToken is string && data.fcmToken.size() <= 4096))
+          && (!('updatedAt' in data) || data.updatedAt is timestamp);
+      }
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow create, update: if request.auth != null
+        && request.auth.uid == userId
+        && isValidSettings();
+      // delete はアプリに削除フローが無いため許可しない（default deny）
     }
   }
 }
