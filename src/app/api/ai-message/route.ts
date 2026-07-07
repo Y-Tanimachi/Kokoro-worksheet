@@ -188,11 +188,12 @@ ${userInput}
 
         return NextResponse.json({ message });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         // 失敗を握りつぶすと「毎回フォールバック文だけが返る」サイレント故障になり原因特定が困難になる。
         // モデル提供終了(404)・APIキー不正(401/403)・レート超過(429) などを判別できるよう詳細をログに残す。
-        const status = error?.status ?? error?.response?.status;
-        const apiMessage = error?.message ?? String(error);
+        const err = error as { status?: number; response?: { status?: number }; message?: string };
+        const status = err?.status ?? err?.response?.status;
+        const apiMessage = err?.message ?? String(error);
         console.error(`Error in AI generation (model=${MODEL_NAME}, status=${status ?? "n/a"}):`, apiMessage);
 
         if (status === 404) {
