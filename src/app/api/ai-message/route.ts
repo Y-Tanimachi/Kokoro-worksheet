@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { GoogleGenAI, HarmCategory, HarmBlockThreshold } from "@google/genai";
+import { GoogleGenAI, HarmCategory, HarmBlockThreshold, FinishReason } from "@google/genai";
 import { adminDb, adminAuth } from "@/utils/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
 
@@ -166,17 +166,29 @@ ${userInput}
             config: {
                 systemInstruction: SYSTEM_INSTRUCTION,
                 safetySettings,
-                maxOutputTokens: 200,  // 応援メッセージは短文なので余裕を持たせた上限
+                // Gemini 2.5系は思考(thinking)がデフォルト有効で、思考トークンが maxOutputTokens の
+                // 予算に含まれる。予算を思考が食い潰すと本文が数十文字で MAX_TOKENS 打ち切りになるため、
+                // 短文生成に不要な思考を無効化し、上限にも余裕を持たせる。
+                thinkingConfig: { thinkingBudget: 0 },
+                maxOutputTokens: 1024, // 長すぎる出力は後段の80文字切り捨てで抑えるため大きめでよい
                 temperature: 0.7,      // 一定の創造性を持たせつつ安定した出力を得る
             }
         });
 
         // 新SDKでは text はメソッドではなくプロパティ。安全フィルタでブロックされると undefined になり得る
         let message = result.text;
+        const finishReason = result.candidates?.[0]?.finishReason;
 
         if (!message || message.trim().length === 0) {
             // 出力が空（安全フィルタによるブロック等）の場合はフォールバックで応答する
-            console.warn(`Empty response from Gemini for user ${userId}. finishReason:`, result.candidates?.[0]?.finishReason);
+            console.warn(`Empty response from Gemini for user ${userId}. finishReason:`, finishReason);
+            return NextResponse.json({ message: FALLBACK_MESSAGE, isFallback: true });
+        }
+
+        if (finishReason === FinishReason.MAX_TOKENS) {
+            // トークン上限で途切れた文をそのまま返すと不自然な尻切れメッセージになるため、
+            // フォールバックで応答する（thinkingBudget: 0 + 上限1024の下では通常発生しない防御）
+            console.warn(`Truncated response from Gemini for user ${userId} (finishReason: MAX_TOKENS)`);
             return NextResponse.json({ message: FALLBACK_MESSAGE, isFallback: true });
         }
 
