@@ -2,6 +2,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { WorksheetList } from "@/components/worksheet/WorksheetList"
 import { WeeklyAnalytics } from "@/components/analytics/WeeklyAnalytics"
+import { EntriesProvider } from "@/context/EntriesContext"
 import { Plus } from "lucide-react"
 
 export default function Home() {
@@ -17,8 +18,11 @@ export default function Home() {
         </Button>
       </div>
 
-      <WeeklyAnalytics />
-      <WorksheetList />
+      {/* 1度の取得を WeeklyAnalytics と WorksheetList で共有する */}
+      <EntriesProvider>
+        <WeeklyAnalytics />
+        <WorksheetList />
+      </EntriesProvider>
     </div>
   )
 }

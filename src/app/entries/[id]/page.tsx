@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { getEntries, deleteEntry } from "@/utils/storage"
+import { getEntry, deleteEntry } from "@/utils/storage"
 import { WorksheetEntry } from "@/types"
 import { useAuth } from "@/context/AuthContext"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -20,13 +20,11 @@ export default function EntryDetailPage() {
 
     useEffect(() => {
         if (typeof id === "string" && user) {
-            // storage.ts に単一ドキュメント取得関数(getEntry)がないため、
-            // 全件取得してクライアント側でIDを絞り込む。データ量が少ない前提の簡易実装
+            // 単一ドキュメントだけを取得する（全件取得は不要）
             const fetchData = async () => {
                 try {
-                    const entries = await getEntries(user.uid)
-                    const found = entries.find((e) => e.id === id)
-                    setEntry(found || null)
+                    const found = await getEntry(user.uid, id)
+                    setEntry(found)
                 } catch (error) {
                     console.error(error)
                 } finally {

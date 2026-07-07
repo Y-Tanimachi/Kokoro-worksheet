@@ -3,13 +3,13 @@
 import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { getWeeklyStats, getDominantEmotion } from "@/utils/statistics";
-import { useWorksheetEntries } from "@/hooks/useWorksheetEntries";
+import { useEntries } from "@/context/EntriesContext";
 import { Loader2, TrendingUp } from "lucide-react";
 
 // 今週（月〜日）の感情集計を表示するウィジェット
 // 未ログイン・エントリなし・ローディング中はそれぞれ異なる表示を返す
 export function WeeklyAnalytics() {
-    const { entries, isLoading, user } = useWorksheetEntries();
+    const { entries, isLoading, user } = useEntries();
 
     // entries が変化した時だけ統計を再計算（毎レンダリングの重複計算を避ける）
     const { weeklyStats, dominantEmotion } = useMemo(() => {

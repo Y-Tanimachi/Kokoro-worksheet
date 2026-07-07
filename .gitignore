@@ -32,6 +32,8 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# 必要な環境変数の一覧はテンプレートとして共有する（実値は含めない）
+!.env.example
 
 # vercel
 .vercel

@@ -2,9 +2,7 @@
 
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-// import { getEntries } from "@/utils/storage" // Removed
-import { useWorksheetEntries } from "@/hooks/useWorksheetEntries"
-import { WorksheetEntry } from "@/types"
+import { useEntries } from "@/context/EntriesContext"
 import { format } from "date-fns"
 import { ja } from "date-fns/locale"
 import { Button } from "@/components/ui/button"
@@ -16,7 +14,7 @@ import { useAuth } from "@/context/AuthContext"
 export function WorksheetList() {
     const router = useRouter()
     const { user, loading: authLoading, signInWithGoogle } = useAuth()
-    const { entries, isLoading } = useWorksheetEntries()
+    const { entries, isLoading } = useEntries()
 
     if (authLoading || isLoading) {
         return (

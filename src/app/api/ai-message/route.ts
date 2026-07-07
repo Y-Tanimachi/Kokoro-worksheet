@@ -78,8 +78,10 @@ export async function POST(req: NextRequest) {
         const body = await req.json();
         const { userInput } = body;
 
-        // 空文字・長すぎる入力（500文字超）を弾く
-        if (typeof userInput !== "string" || userInput.trim().length === 0 || userInput.length > 500) {
+        // 空文字・長すぎる入力を弾く。
+        // クライアントは9項目のワークシート全文＋ラベルを連結して送るため、上限は余裕を持たせる。
+        // （500文字だと記入量の多いユーザーが常に弾かれ、毎回フォールバック文になってしまう）
+        if (typeof userInput !== "string" || userInput.trim().length === 0 || userInput.length > 2000) {
             return NextResponse.json({ error: "Invalid input" }, { status: 400 });
         }
 

@@ -13,10 +13,10 @@ export interface EmotionStat {
 }
 
 /**
- * Calculates emotion statistics for the current week (Monday to Sunday).
+ * Calculates emotion statistics for the week containing `now` (Monday to Sunday).
+ * `now` はテスト容易性のため注入可能。省略時は現在時刻。
  */
-export const getWeeklyStats = (entries: WorksheetEntry[]): EmotionStat[] => {
-    const now = new Date();
+export const getWeeklyStats = (entries: WorksheetEntry[], now: Date = new Date()): EmotionStat[] => {
     // Week starts on Monday (1)
     const weekStart = startOfWeek(now, { weekStartsOn: 1 });
     const weekEnd = endOfWeek(now, { weekStartsOn: 1 });

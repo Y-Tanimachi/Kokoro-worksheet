@@ -13,6 +13,8 @@ jobs:
     steps:
       - name: Send notification to users without today's entry
         run: |
-          curl -sS -w "\nHTTP_STATUS:%{http_code}" -X POST "${{ secrets.APP_URL }}/api/notifications/send" \
+          # --fail-with-body: HTTP 4xx/5xx のときレスポンス本文を出しつつ非0終了し、ジョブを失敗させる
+          # （これが無いと 401/500 でも緑のままになり、通知停止に気づけない）
+          curl --fail-with-body -sS -w "\nHTTP_STATUS:%{http_code}" -X POST "${{ secrets.APP_URL }}/api/notifications/send" \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
             -H "Content-Type: application/json"
