@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { WorksheetList } from "@/components/worksheet/WorksheetList"
-import { WeeklyAnalytics } from "@/components/analytics/WeeklyAnalytics"
+import { EmotionAnalytics } from "@/components/analytics/EmotionAnalytics"
 import { EntriesProvider } from "@/context/EntriesContext"
 import { Plus } from "lucide-react"
 
@@ -18,9 +18,9 @@ export default function Home() {
         </Button>
       </div>
 
-      {/* 1度の取得を WeeklyAnalytics と WorksheetList で共有する */}
+      {/* 1度の取得を EmotionAnalytics と WorksheetList で共有する */}
       <EntriesProvider>
-        <WeeklyAnalytics />
+        <EmotionAnalytics />
         <WorksheetList />
       </EntriesProvider>
     </div>

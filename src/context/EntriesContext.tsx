@@ -4,7 +4,7 @@ import { createContext, useContext, ReactNode } from "react";
 import { useWorksheetEntries } from "@/hooks/useWorksheetEntries";
 
 // ワークシートエントリの取得結果を子コンポーネント間で共有するための Context。
-// ホーム画面では WorksheetList と WeeklyAnalytics が同じデータを必要とするため、
+// ホーム画面では WorksheetList と EmotionAnalytics が同じデータを必要とするため、
 // Provider で1度だけ取得して共有し、Firestore の重複読み取りを防ぐ。
 type EntriesContextValue = ReturnType<typeof useWorksheetEntries>;
 

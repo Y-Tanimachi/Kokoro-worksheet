@@ -4,7 +4,7 @@ import { getEntries } from "@/utils/storage";
 import { useAuth } from "@/context/AuthContext";
 
 // ワークシートエントリの取得ロジックを集約するカスタムフック
-// WorksheetList / WeeklyAnalytics など複数コンポーネントから共有される
+// WorksheetList / EmotionAnalytics など複数コンポーネントから共有される
 export function useWorksheetEntries() {
     const [entries, setEntries] = useState<WorksheetEntry[]>([]);
     const [isLoading, setIsLoading] = useState(true);
