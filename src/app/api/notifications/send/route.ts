@@ -76,7 +76,9 @@ export async function POST(req: NextRequest) {
                         },
                         webpush: {
                             notification: {
-                                icon: "/icons/icon-512.png",
+                                // アイコン名は manifest.json / firebase-messaging-sw.js と揃える
+                                // （差し替え時はファイル名ごと変える運用。詳細は sw 側のコメント参照）
+                                icon: "/icons/icon-512-2.png",
                             },
                         },
                     });
