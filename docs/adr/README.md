@@ -66,7 +66,7 @@ ADR-0001 から ADR-0011 は **事後記録** です。決定した当時に書�
 - `cn` の import 元の統一と `src/lib/utils.ts` の整理（[0006](0006-tailwind-v4-handwritten-shadcn.md)）
 - 個別 `@radix-ui/*` 3 種を `radix-ui` メタパッケージに寄せる（[0006](0006-tailwind-v4-handwritten-shadcn.md)）
 - 未使用の `tw-animate-css` を削除する（[0006](0006-tailwind-v4-handwritten-shadcn.md)）
-- 通知アイコンと favicon が旧画像のまま（[0010](0010-handwritten-pwa-service-worker.md)）
+- アイコン差し替え手順の文書化（参照が 4 箇所に散らばっている）（[0010](0010-handwritten-pwa-service-worker.md)）
 - CI で lint とテストを走らせる（[0011](0011-unit-tests-pure-functions-only.md)）
 - `firestore.rules` のデプロイ手順化（[0002](0002-firebase-as-backend.md)）
 
