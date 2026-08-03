@@ -106,4 +106,31 @@ npm run test:watch   # watch モード
 
 クロンを動かすには、GitHub リポジトリの Secrets に `APP_URL`（デプロイ先 URL）と `CRON_SECRET` を設定します。
 
-開発時の設計方針（日付文字列の扱い、エントリ取得の方針など）は [CLAUDE.md](CLAUDE.md) にまとめてあります。
+### アイコンの差し替え
+
+アイコンの参照は 4 箇所に分かれています。1 箇所だけ直しても他が旧アイコンのまま残り、気づきにくいので手順にしてあります（過去に実際、manifest だけ更新してアイコンが約 2 か月 404 になっていました）。
+
+| 参照元 | 指す先 | 用途 |
+| --- | --- | --- |
+| `src/app/manifest.json` | `/icons/icon-512-2.png`<br>`/icons/icon-maskable-512-2.png` | ホーム画面に追加したときのアイコン |
+| `public/firebase-messaging-sw.js` | `/icons/icon-512-2.png` | 通知アイコン（バックグラウンド受信時） |
+| `src/app/api/notifications/send/route.ts` | `/icons/icon-512-2.png` | 通知アイコン（FCM の webpush 指定） |
+| `src/app/icon.png` | （ファイルそのもの） | favicon（ブラウザのタブ） |
+
+**ファイル名は毎回変えます。** インストール済みの端末はアイコンを URL 単位でキャッシュするため、同じ名前に上書きしても更新されません。現行は末尾 `-2` なので、次は `-3` にします。
+
+手順は次のとおりです。
+
+1. 512x512 の PNG を用意する。maskable 用は端が円形に切り取られても成立するよう、中央 80% に収まる余白のある画像にする（`any` 用と同じ画像で済ませることもできますが、その場合は端が欠けます）
+2. `public/icons/` に連番を上げた名前で**追加**する（`icon-512-3.png` と `icon-maskable-512-3.png`）
+3. `src/app/manifest.json` の `icons[].src` を 2 つとも新しい名前に変える
+4. `public/firebase-messaging-sw.js` の `icon` と `badge` を新しい名前に変える
+5. `src/app/api/notifications/send/route.ts` の webpush の `icon` を新しい名前に変える
+6. `src/app/icon.png` を新しい画像で**上書き**する。ここだけはファイル名を変えません（下記）
+7. 旧ファイルは消さない。古いマニフェストをキャッシュしたままの端末が参照している可能性があります
+
+`src/app/icon.png` の名前を変えられないのは、これが Next.js の app icon 規約で決まっているためです。規約が認識するのは `icon.png` と `icon1.png` のような**数字**サフィックスだけで、`icon-2.png` のようなハイフン付きは認識されず配信もされません。また `icon-maskable.png` という規約は存在しません（maskable は manifest 側の概念で、実体は `public/icons/` に置きます）。
+
+差し替え後は、デプロイ先をブラウザの DevTools で開き、Application > Manifest でアイコンが読めているかを確認してください。
+
+開発時の設計方針（日付文字列の扱い、エントリ取得の方針など）は [CLAUDE.md](CLAUDE.md)、これまでの設計判断とその経緯は [docs/adr/](docs/adr/) にまとめてあります。
