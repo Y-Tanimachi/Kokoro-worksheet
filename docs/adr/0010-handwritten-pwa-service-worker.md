@@ -62,10 +62,12 @@ Service Worker に求めているのが FCM のバックグラウンド受信だ
 - **Firebase のバージョンを 2 箇所で手動同期する必要がある。** `public/firebase-messaging-sw.js` の `importScripts` の URL（現在 12.8.0）と、`package.json` の `firebase`（現在 12.8.0）。`npm update` で片方だけ上がるとズレる。
 - Firebase のクライアント設定が `src/utils/firebase.ts` と Service Worker の 2 箇所に重複している（どちらも公開可能な値なので秘匿性の問題はないが、変更時は両方直す）。
 - オフラインでは何も表示できない。ホーム画面から開いても通信できなければ白紙になる。
-- 通知アイコンの参照先が `/icons/icon-512.png`。`public/icons/` には `icon-512.png` と `icon-maskable-512.png` があるが、`manifest.json` は `/icons/icon-512-2.png` と `/icons/icon-maskable-512-2.png` を参照しており、**ファイル名が一致していない**。マニフェストのアイコンが 404 になっている可能性がある。
+- **アイコンの配置漏れが実際に起きた。** 2026-06-09 のアイコン変更（`438f97f`）で、新しい画像を `src/app/icon-2.png` に追加して `manifest.json` の参照を `/icons/icon-512-2.png` に書き換えたが、`public/icons/` への配置が漏れていた。マニフェストのアイコンが約 2 か月にわたって 404 になっていた（2026-08-03 に修正）。アイコンの実体が `src/app/` と `public/icons/` の 2 箇所に分かれていて、参照が解決するかを検証する仕組みが無いことが原因。
+- 同じ理由で、通知アイコン（`public/firebase-messaging-sw.js` と `/api/notifications/send` が参照する `/icons/icon-512.png`）と favicon（`src/app/icon.png`）は 2026-06-09 以前の旧画像のままになっている。表示は壊れていないが、アプリのアイコンと一致していない。
 
 ## Action Items
 
-1. [ ] `manifest.json` のアイコンパスと `public/icons/` の実ファイル名の不一致を確認して直す
-2. [ ] `firebase` を更新するときは Service Worker の `importScripts` の URL も合わせて更新する（手順を README に追記）
-3. [ ] オフライン閲覧の要件が出てきたら Option B を再検討する
+1. [x] `manifest.json` のアイコンパスと `public/icons/` の実ファイル名の不一致を直す（2026-08-03 完了）
+2. [ ] 通知アイコンと favicon を現行のアイコンに揃えるか決める
+3. [ ] `firebase` を更新するときは Service Worker の `importScripts` の URL も合わせて更新する（手順を README に追記）
+4. [ ] オフライン閲覧の要件が出てきたら Option B を再検討する
