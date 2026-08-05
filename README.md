@@ -54,7 +54,7 @@
 - Gemini API（`@google/genai`。応援メッセージの生成）
 - Tailwind CSS v4 + shadcn/ui スタイルの自作コンポーネント
 - Vitest（ユニットテスト）
-- デプロイ先は Vercel、通知バッチは GitHub Actions のクロン
+- デプロイ先は Vercel、通知バッチは Vercel Cron
 
 ## セットアップ
 
@@ -73,7 +73,7 @@ npm run dev
 | `GEMINI_API_KEY` | 応援メッセージ生成（サーバー専用） |
 | `FIREBASE_PROJECT_ID` / `FIREBASE_CLIENT_EMAIL` / `FIREBASE_PRIVATE_KEY` | Firebase Admin SDK（サーバー専用） |
 | `NEXT_PUBLIC_FIREBASE_VAPID_KEY` | プッシュ通知の VAPID 公開鍵 |
-| `CRON_SECRET` | 通知バッチの Bearer 認証用シークレット |
+| `CRON_SECRET` | 通知バッチの Bearer 認証用シークレット（Vercel Cron が自動付与） |
 
 `FIREBASE_PRIVATE_KEY` は改行を `\n` リテラルに置換した1行の文字列にしてください。形式が違うと `npm run build` が `DECODER routines::unsupported` で落ちます（詳細は CLAUDE.md）。なお Firebase のクライアント設定（apiKey など公開可能な値）は `src/utils/firebase.ts` に直接書いてあるため、環境変数は不要です。
 
@@ -102,9 +102,9 @@ npm run test:watch   # watch モード
 ### API ルート
 
 - `POST /api/ai-message` — Gemini で応援メッセージを生成。Firebase ID トークン検証、ユーザー別レートリミット、入力バリデーションで保護。生成に失敗しても定型文を返し、保存フローは止めない。
-- `POST /api/notifications/send` — GitHub Actions のクロン（`.github/workflows/send-notifications.yml`、12:00 / 18:00 JST）から呼ばれ、当日の記録がないユーザーへ FCM プッシュを送る。無効になったトークンは自動で削除する。
+- `GET /api/notifications/send` — Vercel Cron（`vercel.json`、12:00 / 18:00 JST）から呼ばれ、当日の記録がないユーザーへ FCM プッシュを送る。無効になったトークンは自動で削除する。手動実行用に POST でも同じ処理を呼べる。
 
-クロンを動かすには、GitHub リポジトリの Secrets に `APP_URL`（デプロイ先 URL）と `CRON_SECRET` を設定します。
+クロンを動かすには、Vercel のダッシュボードで環境変数 `CRON_SECRET` を設定します（Vercel がクロン呼び出し時に `Authorization: Bearer` ヘッダーとして自動付与します）。Hobby プランではクロン1本につき1日1回までのため、12:00 と 18:00 は別々のクロンとして登録しています。実行時刻は指定時刻から最大59分遅れることがあります。
 
 ### アイコンの差し替え
 

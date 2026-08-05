@@ -16,8 +16,15 @@ function safeEqual(a: string, b: string): boolean {
     return timingSafeEqual(bufA, bufB);
 }
 
-export async function POST(req: NextRequest) {
-    // CRON_SECRET でクロンジョブ以外からのアクセスを弾く
+// Vercel Cron はビルド時ではなく毎回実行させる必要がある（認証ヘッダーの検証があるため）
+export const dynamic = "force-dynamic";
+// ユーザー数×（Firestore クエリ + FCM 送信）で既定の関数タイムアウトでは不安なため余裕を持たせる
+// （60s は Hobby プランの上限内）
+export const maxDuration = 60;
+
+async function handleSend(req: NextRequest) {
+    // CRON_SECRET でクロンジョブ以外からのアクセスを弾く。
+    // Vercel Cron は環境変数 CRON_SECRET を Authorization: Bearer ヘッダーとして自動付与する
     const authHeader = req.headers.get("Authorization");
     const cronSecret = process.env.CRON_SECRET;
     if (!cronSecret || !authHeader || !safeEqual(authHeader, `Bearer ${cronSecret}`)) {
@@ -124,3 +131,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }
+
+// GET: Vercel Cron の呼び出し用（Vercel Cron は GET リクエストを送る）
+// POST: curl での手動実行用に残している（Bearer 認証は共通）
+export { handleSend as GET, handleSend as POST };

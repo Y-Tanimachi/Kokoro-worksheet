@@ -24,9 +24,10 @@ ADR-0001 から ADR-0011 は **事後記録** です。決定した当時に書�
 | [0006](0006-tailwind-v4-handwritten-shadcn.md) | Tailwind CSS v4 と、手書きの shadcn/ui スタイルコンポーネントを使う | Accepted |
 | [0007](0007-gemini-with-mandatory-fallback.md) | 応援メッセージは Gemini で生成し、失敗時は必ず定型文を返す | Accepted |
 | [0008](0008-ai-endpoint-protection.md) | AI エンドポイントを ID トークン検証と Firestore トランザクションによるレートリミットで保護する | Accepted |
-| [0009](0009-github-actions-cron.md) | 通知バッチのスケジューラに GitHub Actions を使う | Accepted（再検討候補） |
+| [0009](0009-github-actions-cron.md) | 通知バッチのスケジューラに GitHub Actions を使う | Superseded by 0012 |
 | [0010](0010-handwritten-pwa-service-worker.md) | PWA と Service Worker をライブラリなしで手書きする | Accepted |
 | [0011](0011-unit-tests-pure-functions-only.md) | テストは Vitest による純粋関数のユニットテストに限定する | Accepted |
+| [0012](0012-vercel-cron.md) | 通知バッチのスケジューラを Vercel Cron に切り替える | Accepted |
 
 ## 現在のバージョン（2026-08-03 時点）
 
