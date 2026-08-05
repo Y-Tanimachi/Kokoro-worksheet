@@ -1,6 +1,6 @@
 # ADR-0009: 通知バッチのスケジューラに GitHub Actions を使う
 
-**Status:** Accepted（再検討候補）
+**Status:** Superseded by [ADR-0012](0012-vercel-cron.md)
 **Date:** 2026-06-09（2026-07-25 / 07-26 に信頼性を修正 / 事後記録: 2026-08-03）
 **Deciders:** Y-Tanimachi（単独開発）
 

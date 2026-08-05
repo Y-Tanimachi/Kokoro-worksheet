@@ -51,7 +51,7 @@ npm run test:watch                       # watch モード
 Firebase Admin SDK（`src/utils/firebase-admin.ts`、サーバー専用・クライアントに露出禁止）を使う2つのエンドポイント:
 
 - `POST /api/ai-message` — Gemini（`@google/genai`、使用モデルは route.ts の `MODEL_NAME`）で40〜70字の応援メッセージを生成。Firebase ID トークン検証＋Firestore トランザクションによるユーザー別レートリミット＋入力バリデーションの三重保護。**失敗時は必ずフォールバック文を返し、クライアントの保存フローを止めない**設計。
-- `POST /api/notifications/send` — GitHub Actions のクロン（`.github/workflows/send-notifications.yml`、12:00 / 18:00 JST）から `CRON_SECRET` の Bearer 認証で呼ばれ、当日の記録が無いユーザーへ FCM プッシュを送る。無効トークンは自動クリーンアップする。
+- `GET /api/notifications/send` — Vercel Cron（`vercel.json`、12:00 / 18:00 JST = 03:00 / 09:00 UTC）から `CRON_SECRET` の Bearer 認証で呼ばれ、当日の記録が無いユーザーへ FCM プッシュを送る。無効トークンは自動クリーンアップする。POST は手動実行用に同じ処理を公開している。Hobby プランはクロン1本につき1日1回の制約があるため、2時刻を別クロンとして `vercel.json` に登録している。
 
 ### UI コンポーネント
 
