@@ -28,6 +28,7 @@ ADR-0001 から ADR-0011 は **事後記録** です。決定した当時に書�
 | [0010](0010-handwritten-pwa-service-worker.md) | PWA と Service Worker をライブラリなしで手書きする | Accepted |
 | [0011](0011-unit-tests-pure-functions-only.md) | テストは Vitest による純粋関数のユニットテストに限定する | Accepted |
 | [0012](0012-vercel-cron.md) | 通知バッチのスケジューラを Vercel Cron に切り替える | Accepted |
+| [0013](0013-icon-single-source.md) | アイコン参照を定数モジュール 1 箇所に集約する | Accepted |
 
 ## 現在のバージョン（2026-08-03 時点）
 
