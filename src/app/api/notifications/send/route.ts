@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { timingSafeEqual } from "crypto";
 import { adminDb, adminMessaging } from "@/utils/firebase-admin";
 import { getTodayStartJST } from "@/utils/date";
+import { ICON_PATH } from "@/constants/icon";
 
 // 通知テンプレート（固定）
 const NOTIFICATION_TITLE = "今日のこころの記録をしましょう";
@@ -83,9 +84,9 @@ async function handleSend(req: NextRequest) {
                         },
                         webpush: {
                             notification: {
-                                // アイコン名は manifest.json / firebase-messaging-sw.js と揃える
-                                // （差し替え時はファイル名ごと変える運用。詳細は sw 側のコメント参照）
-                                icon: "/icons/icon-512-2.png",
+                                // Service Worker はこのペイロードの icon を読んで表示するため、
+                                // ここが通知アイコンの実質的な参照元になる
+                                icon: ICON_PATH,
                             },
                         },
                     });
