@@ -18,12 +18,14 @@ messaging.onBackgroundMessage((payload) => {
     const title = payload.notification?.title || "今日のこころの記録をしましょう";
     const body = payload.notification?.body || "今日はまだワークシートの記録がありません。気持ちを振り返る時間を作りましょう 💙";
 
-    // 末尾の -2 は現行アイコンのファイル名。アイコンを差し替えるときは
-    // URL ごと変えないとインストール済み端末のキャッシュが更新されないため、
-    // 上書きではなく連番を付けたファイルを追加する運用にしている（manifest.json も同じ名前を参照）
+    // アイコンはサーバー（/api/notifications/send）が webpush ペイロードで送る URL を使う。
+    // このファイルは src/ の定数を import できないため、ファイル名をここに書かずに
+    // ペイロード経由で受け取ることで参照元を src/constants/icon.ts に集約している（issue #18）。
+    // icon が無いペイロード（現運用では来ない）の場合はブラウザ既定の表示に任せる
+    const icon = payload.notification?.icon || payload.data?.icon;
+
     self.registration.showNotification(title, {
         body,
-        icon: "/icons/icon-512-2.png",
-        badge: "/icons/icon-512-2.png",
+        ...(icon ? { icon, badge: icon } : {}),
     });
 });

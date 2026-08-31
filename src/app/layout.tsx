@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/layout/Header";
 import { AuthProvider } from "@/context/AuthContext";
+import { ICON_PATH } from "@/constants/icon";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,6 +19,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Kokoro Worksheet",
   description: "自分の感情を整理するワークシート",
+  // favicon はファイル規約（src/app/icon.png）ではなく public/icons/ の
+  // 現行アイコンを直接指す。アイコン参照を @/constants/icon に集約するため
+  icons: {
+    icon: ICON_PATH,
+  },
 };
 
 export default function RootLayout({
