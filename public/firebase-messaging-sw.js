@@ -11,21 +11,11 @@ firebase.initializeApp({
     appId: "1:81421732991:web:95193c6de9ad1f437e834a"
 });
 
-const messaging = firebase.messaging();
+// バックグラウンド受信の初期化。firebase.messaging() を呼ぶことで SDK の push ハンドラが登録される。
+firebase.messaging();
 
-// アプリがバックグラウンド（または閉じている）のときに受信したメッセージを処理する
-messaging.onBackgroundMessage((payload) => {
-    const title = payload.notification?.title || "今日のこころの記録をしましょう";
-    const body = payload.notification?.body || "今日はまだワークシートの記録がありません。気持ちを振り返る時間を作りましょう 💙";
-
-    // アイコンはサーバー（/api/notifications/send）が webpush ペイロードで送る URL を使う。
-    // このファイルは src/ の定数を import できないため、ファイル名をここに書かずに
-    // ペイロード経由で受け取ることで参照元を src/constants/icon.ts に集約している（issue #18）。
-    // icon が無いペイロード（現運用では来ない）の場合はブラウザ既定の表示に任せる
-    const icon = payload.notification?.icon || payload.data?.icon;
-
-    self.registration.showNotification(title, {
-        body,
-        ...(icon ? { icon, badge: icon } : {}),
-    });
-});
+// onBackgroundMessage で showNotification は呼ばない。
+// サーバー（/api/notifications/send）は notification ペイロード付きで送っており、
+// その場合 SDK が自動で通知を表示するため、ここでも表示すると同じ通知が2件出てしまう。
+// アイコンはサーバーが webpush.notification.icon で送る URL が自動表示にも使われるので、
+// 参照元は src/constants/icon.ts に集約されたまま保たれる（issue #18）。
