@@ -98,7 +98,9 @@ export function WorksheetForm() {
         try {
             const entry: WorksheetEntry = {
                 id: crypto.randomUUID(),  // ブラウザ標準APIでUUIDを生成
-                createdAt: formData.createdAt || new Date().toISOString(),
+                // 日時欄が空にされた場合も JST 壁時計形式で補う。toISOString()（UTC・秒付き）だと
+                // 文字列の辞書順比較が崩れ、通知判定や期間集計で日付がずれるため
+                createdAt: formData.createdAt || toDatetimeLocalJST(),
                 trigger: formData.trigger || "",
                 emotions: formData.emotions || [],
                 emotionStrength: formData.emotionStrength || 5,
