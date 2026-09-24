@@ -6,7 +6,7 @@ import { useEntries } from "@/context/EntriesContext"
 import { format } from "date-fns"
 import { ja } from "date-fns/locale"
 import { Button } from "@/components/ui/button"
-import { Plus, Loader2 } from "lucide-react"
+import { Plus, Loader2, RotateCw } from "lucide-react"
 import { useAuth } from "@/context/AuthContext"
 
 // ホーム画面に表示するワークシート一覧
@@ -14,7 +14,7 @@ import { useAuth } from "@/context/AuthContext"
 export function WorksheetList() {
     const router = useRouter()
     const { user, loading: authLoading, signInWithGoogle } = useAuth()
-    const { entries, isLoading } = useEntries()
+    const { entries, isLoading, error, reload } = useEntries()
 
     if (authLoading || isLoading) {
         return (
@@ -31,6 +31,22 @@ export function WorksheetList() {
                 <p className="text-muted-foreground">データを保存・閲覧するにはログインしてください。</p>
                 <Button onClick={() => signInWithGoogle()}>
                     Googleでログイン
+                </Button>
+            </div>
+        )
+    }
+
+    // 取得失敗は「記録なし」と別の表示にし、データが消えたと誤解させない
+    if (error) {
+        return (
+            <div className="text-center py-10 space-y-4">
+                <h2 className="text-xl font-semibold">記録を読み込めませんでした</h2>
+                <p className="text-muted-foreground">
+                    記録は消えていません。通信状況を確認して、もう一度お試しください。
+                </p>
+                <Button onClick={() => reload()}>
+                    <RotateCw className="mr-2 h-4 w-4" />
+                    再読み込み
                 </Button>
             </div>
         )

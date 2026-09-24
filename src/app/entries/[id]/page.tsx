@@ -17,6 +17,8 @@ export default function EntryDetailPage() {
     const { user, loading: authLoading } = useAuth()
     const [entry, setEntry] = useState<WorksheetEntry | null>(null)
     const [isLoading, setIsLoading] = useState(true)
+    // 取得失敗を「データが見つかりません」（存在しない）と区別して表示するため
+    const [loadFailed, setLoadFailed] = useState(false)
 
     useEffect(() => {
         if (typeof id === "string" && user) {
@@ -27,6 +29,7 @@ export default function EntryDetailPage() {
                     setEntry(found)
                 } catch (error) {
                     console.error(error)
+                    setLoadFailed(true)
                 } finally {
                     setIsLoading(false)
                 }
@@ -44,6 +47,17 @@ export default function EntryDetailPage() {
 
     if (!user) {
         return <div className="p-8 text-center">ログインが必要です</div>
+    }
+
+    if (loadFailed) {
+        return (
+            <div className="p-8 text-center space-y-4">
+                <p>記録を読み込めませんでした。通信状況を確認して、もう一度お試しください。</p>
+                <Button variant="outline" onClick={() => window.location.reload()}>
+                    再読み込み
+                </Button>
+            </div>
+        )
     }
 
     if (!entry) {
