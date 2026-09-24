@@ -24,7 +24,7 @@
 - `src/app/manifest.json` → `src/app/manifest.ts`（Next.js の `MetadataRoute.Manifest` 規約）に変換して定数を import
 - favicon はファイル規約（`src/app/icon.png`、削除）をやめ、`layout.tsx` の `metadata.icons` で定数を参照
 - `route.ts` の webpush `icon` は定数を参照
-- Service Worker はファイル名を持たず、サーバーが webpush ペイロードで送る icon URL（`payload.notification?.icon || payload.data?.icon`）を使う。icon が無い場合はブラウザ既定の表示にフォールバック
+- Service Worker はファイル名を持たず、サーバーが webpush ペイロードで送る icon URL（`payload.notification?.icon || payload.data?.icon`）を使う。icon が無い場合はブラウザ既定の表示にフォールバック（※ 2026-09-24 に SW の実装が変わった。末尾の「追記」を参照）
 
 差し替え作業は「`public/icons/` に連番を上げた画像を追加 + 定数 1 行の変更」になった。
 
@@ -70,3 +70,9 @@
 1. [ ] デプロイ後、DevTools の Application > Manifest でアイコンが読めていることを確認する
 2. [ ] 定時通知（12:00 / 18:00 JST）がアイコン付きで届くことを実機で確認する
 3. [ ] 次回のアイコン差し替え時、定数 1 行 + 画像追加だけで全箇所が切り替わることを検証し、README の手順に不足があれば直す
+
+## 追記（2026-09-24）: Service Worker は通知を自分で表示しなくなった
+
+[PR #22](https://github.com/Y-Tanimachi/Kokoro-worksheet/pull/22) で、Service Worker の `onBackgroundMessage` による `showNotification` を削除した。サーバーは `notification` ペイロード付きで送っており、その場合は Firebase の SW SDK が通知を自動表示する。そのうえで `onBackgroundMessage` も呼ばれるため、同じ通知が 2 件出ていた。
+
+アイコンの参照元は変わらない。SDK の自動表示は、サーバーが送る `webpush.notification.icon`（`ICON_PATH`）をそのまま使う。Decision の「Service Worker はファイル名を持たず、ペイロードの icon URL を使う」という結論は保たれ、変わったのは「SW のコードが読む」から「SDK が読む」への経路だけである。Trade-off Analysis の「icon を送らないペイロードでは通知アイコンが出ない」も引き続き成り立つ。

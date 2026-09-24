@@ -108,7 +108,7 @@ npm run test:watch   # watch モード
 
 ### アイコンの差し替え
 
-アイコンのファイル名は `src/constants/icon.ts` に集約されています。manifest（`src/app/manifest.ts`）・favicon（`src/app/layout.tsx` の `metadata.icons`）・FCM 通知（`src/app/api/notifications/send/route.ts`）はすべてこの定数を参照し、Service Worker（`public/firebase-messaging-sw.js`）は通知ペイロードに含まれる URL を使うため、コード側で書き換えるのは定数ファイル 1 箇所だけです（以前は 4 箇所に分かれており、manifest だけ更新してアイコンが約 2 か月 404 になっていたことがあります）。
+アイコンのファイル名は `src/constants/icon.ts` に集約されています。manifest（`src/app/manifest.ts`）・favicon（`src/app/layout.tsx` の `metadata.icons`）・FCM 通知（`src/app/api/notifications/send/route.ts`）はすべてこの定数を参照し、Service Worker（`public/firebase-messaging-sw.js`）経由の通知表示は Firebase SDK が通知ペイロードに含まれる URL をそのまま使うため、コード側で書き換えるのは定数ファイル 1 箇所だけです（以前は 4 箇所に分かれており、manifest だけ更新してアイコンが約 2 か月 404 になっていたことがあります）。
 
 **ファイル名は毎回変えます。** インストール済みの端末はアイコンを URL 単位でキャッシュするため、同じ名前に上書きしても更新されません。現行は末尾 `-2` なので、次は `-3` にします。
 

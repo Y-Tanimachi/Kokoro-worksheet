@@ -18,7 +18,7 @@ PWA 化の目的は 2 つある。
 `next-pwa` や Workbox を導入せず、必要最小限を手書きする。
 
 - **マニフェスト** — `src/app/manifest.json`（App Router が `/manifest.json` として配信する）。`display: standalone`、512px のアイコン 2 種（`any` と `maskable`）
-- **Service Worker** — `public/firebase-messaging-sw.js` の 1 ファイルのみ。FCM のバックグラウンド受信（`onBackgroundMessage`）だけを担当する
+- **Service Worker** — `public/firebase-messaging-sw.js` の 1 ファイルのみ。FCM のバックグラウンド受信だけを担当する（2026-09-24 以降は `firebase.messaging()` で SDK を初期化するだけで、通知の表示は SDK に任せている。経緯は ADR-0013 の追記を参照）
 - Service Worker は ESM 非対応環境で動くため、Firebase の compat SDK を CDN から `importScripts()` で読み込む
 - 登録は通知の許可を求めるタイミングで行う（`src/utils/notifications.ts` の `requestNotificationPermission()`）
 
