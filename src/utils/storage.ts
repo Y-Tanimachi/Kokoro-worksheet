@@ -26,8 +26,10 @@ export const getEntries = async (userId: string): Promise<WorksheetEntry[]> => {
 
         return querySnapshot.docs.map(doc => doc.data() as WorksheetEntry);
     } catch (error) {
+        // [] を返すと画面が「まだ記録がありません」になり、データが消えたと誤解させてしまう。
+        // 呼び出し側で「記録なし」と「取得失敗」を区別できるよう投げ直す
         console.error("Error getting entries:", error);
-        return [];
+        throw error;
     }
 };
 
@@ -40,8 +42,9 @@ export const getEntry = async (userId: string, id: string): Promise<WorksheetEnt
         const snap = await getDoc(entryRef);
         return snap.exists() ? (snap.data() as WorksheetEntry) : null;
     } catch (error) {
+        // null を返すと詳細画面が「データが見つかりません」になるため、getEntries と同じく投げ直す
         console.error("Error getting entry:", error);
-        return null;
+        throw error;
     }
 };
 

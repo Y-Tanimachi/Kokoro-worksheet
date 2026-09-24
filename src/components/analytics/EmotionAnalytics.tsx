@@ -84,7 +84,7 @@ function ReportBody({
 // 今週（月〜日）/ 今月（1日〜月末）の感情集計をタブで切り替えて表示するウィジェット
 // 未ログイン・エントリなし・ローディング中はそれぞれ異なる表示を返す
 export function EmotionAnalytics() {
-    const { entries, isLoading, user } = useEntries();
+    const { entries, isLoading, error, user } = useEntries();
     const [period, setPeriod] = useState<Period>("week");
 
     // entries が変化した時だけ統計を再計算（毎レンダリングの重複計算を避ける）
@@ -112,7 +112,8 @@ export function EmotionAnalytics() {
         );
     }
 
-    if (!user || entries.length === 0) {
+    // 取得失敗時は WorksheetList 側がエラーと再読み込みボタンを出すので、ここは何も出さない
+    if (!user || error || entries.length === 0) {
         return null;
     }
 

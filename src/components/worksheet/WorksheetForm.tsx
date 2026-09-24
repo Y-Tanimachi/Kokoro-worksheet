@@ -13,6 +13,7 @@ import { toDatetimeLocalJST } from "@/utils/date"
 import { WorksheetEntry, Emotion } from "@/types"
 import { Smile, Frown, Angry, Meh, Heart, Zap, HelpCircle, Loader2, Bot, Sparkles } from "lucide-react"
 import { useAuth } from "@/context/AuthContext"
+import { MAX_FIELD_LENGTH, FIELD_LENGTH_WARNING_RATIO } from "@/constants/worksheet"
 
 // 感情選択ボタンの表示定義（アイコン・色をまとめて管理）
 const EMOTIONS: { label: Emotion; icon: React.ReactNode; color: string }[] = [
@@ -24,6 +25,24 @@ const EMOTIONS: { label: Emotion; icon: React.ReactNode; color: string }[] = [
     { label: "無力感", icon: <Meh className="w-6 h-6" />, color: "bg-indigo-100 dark:bg-indigo-900 border-indigo-200" },
     { label: "愛情", icon: <Heart className="w-6 h-6" />, color: "bg-pink-100 dark:bg-pink-900 border-pink-200" },
 ]
+
+// 入力が上限に近づいたら残り文字数を警告として出す。
+// maxLength で入力自体は止まる（貼り付けは切り詰められる）ため、止まった理由が分かるよう上限到達時も表示する
+function LengthWarning({ value }: { value?: string }) {
+    const length = value?.length ?? 0
+    if (length < MAX_FIELD_LENGTH * FIELD_LENGTH_WARNING_RATIO) return null
+    const reached = length >= MAX_FIELD_LENGTH
+    return (
+        <p
+            className={`text-xs text-right ${reached ? "text-destructive" : "text-amber-600 dark:text-amber-400"}`}
+            aria-live="polite"
+        >
+            {reached
+                ? `上限の${MAX_FIELD_LENGTH}文字に達しました`
+                : `残り${MAX_FIELD_LENGTH - length}文字です（上限${MAX_FIELD_LENGTH}文字）`}
+        </p>
+    )
+}
 
 // CBTワークシートを4ステップで入力するフォームコンポーネント
 // step 1〜4: 入力ステップ / step 5: 完了画面（AIメッセージ表示）
@@ -221,7 +240,9 @@ export function WorksheetForm() {
                                     value={formData.trigger}
                                     onChange={(e) => handleChange("trigger", e.target.value)}
                                     className="min-h-[120px]"
+                                    maxLength={MAX_FIELD_LENGTH}
                                 />
+                                <LengthWarning value={formData.trigger} />
                             </div>
                         </>
                     )}
@@ -271,7 +292,9 @@ export function WorksheetForm() {
                                     placeholder="例：どうして子どもは私を無視するんだろう？"
                                     value={formData.automaticThought}
                                     onChange={(e) => handleChange("automaticThought", e.target.value)}
+                                    maxLength={MAX_FIELD_LENGTH}
                                 />
+                                <LengthWarning value={formData.automaticThought} />
                             </div>
                             <div className="space-y-2">
                                 <Label>6. 別の考え方（代替思考）</Label>
@@ -279,7 +302,9 @@ export function WorksheetForm() {
                                     placeholder="例：子どもはまだ選択の方法を学んでいる..."
                                     value={formData.alternativeThought}
                                     onChange={(e) => handleChange("alternativeThought", e.target.value)}
+                                    maxLength={MAX_FIELD_LENGTH}
                                 />
+                                <LengthWarning value={formData.alternativeThought} />
                             </div>
                             <div className="space-y-2">
                                 <Label>7. とった行動（反応）</Label>
@@ -287,7 +312,9 @@ export function WorksheetForm() {
                                     placeholder="例：大声で叱った"
                                     value={formData.reaction}
                                     onChange={(e) => handleChange("reaction", e.target.value)}
+                                    maxLength={MAX_FIELD_LENGTH}
                                 />
+                                <LengthWarning value={formData.reaction} />
                             </div>
                         </>
                     )}
@@ -300,7 +327,9 @@ export function WorksheetForm() {
                                     placeholder="例：叱る前に一呼吸おけばよかった"
                                     value={formData.reflection}
                                     onChange={(e) => handleChange("reflection", e.target.value)}
+                                    maxLength={MAX_FIELD_LENGTH}
                                 />
+                                <LengthWarning value={formData.reflection} />
                             </div>
                             <div className="space-y-2">
                                 <Label>9. 次に試すこと</Label>
@@ -308,7 +337,9 @@ export function WorksheetForm() {
                                     placeholder="例：小さな選択肢を与える"
                                     value={formData.nextStep}
                                     onChange={(e) => handleChange("nextStep", e.target.value)}
+                                    maxLength={MAX_FIELD_LENGTH}
                                 />
+                                <LengthWarning value={formData.nextStep} />
                             </div>
                             <div className="space-y-2">
                                 <Label className="text-primary font-bold">10. 自分を褒める！</Label>
@@ -317,7 +348,9 @@ export function WorksheetForm() {
                                     value={formData.praise}
                                     onChange={(e) => handleChange("praise", e.target.value)}
                                     className="bg-primary/5 border-primary/20"
+                                    maxLength={MAX_FIELD_LENGTH}
                                 />
+                                <LengthWarning value={formData.praise} />
                             </div>
                         </>
                     )}

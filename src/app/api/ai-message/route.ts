@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenAI, HarmCategory, HarmBlockThreshold, FinishReason } from "@google/genai";
 import { adminDb, adminAuth } from "@/utils/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
+import { MAX_FIELD_LENGTH, TEXT_FIELD_COUNT } from "@/constants/worksheet";
 
 // Google Gemini を使って応援メッセージを生成するサーバーサイドAPIエンドポイント
 // セキュリティ: Firebase IDトークン認証 + レートリミット + 入力バリデーション の三重保護
@@ -53,6 +54,11 @@ const FALLBACK_MESSAGE = "感情に向き合えたことが、最初の一歩で
 const HOURLY_LIMIT = 20;  // 1時間あたり最大リクエスト数
 const DAILY_LIMIT = 100;  // 1日あたり最大リクエスト数
 
+// 入力本文の上限。クライアントはテキスト項目（各 MAX_FIELD_LENGTH 文字まで）に
+// 項目ラベルと感情の行を付けて連結して送る。項目上限の合計にラベル等の分の余裕を足し、
+// 入力欄の上限内で書いた正規の入力が弾かれないようにする
+const MAX_INPUT_LENGTH = MAX_FIELD_LENGTH * TEXT_FIELD_COUNT + 500;
+
 export async function POST(req: NextRequest) {
     try {
         // --- 認証チェック ---
@@ -78,10 +84,8 @@ export async function POST(req: NextRequest) {
         const body = await req.json();
         const { userInput } = body;
 
-        // 空文字・長すぎる入力を弾く。
-        // クライアントは9項目のワークシート全文＋ラベルを連結して送るため、上限は余裕を持たせる。
-        // （500文字だと記入量の多いユーザーが常に弾かれ、毎回フォールバック文になってしまう）
-        if (typeof userInput !== "string" || userInput.trim().length === 0 || userInput.length > 2000) {
+        // 空文字・長すぎる入力を弾く（上限の考え方は MAX_INPUT_LENGTH を参照）
+        if (typeof userInput !== "string" || userInput.trim().length === 0 || userInput.length > MAX_INPUT_LENGTH) {
             return NextResponse.json({ error: "Invalid input" }, { status: 400 });
         }
 
