@@ -8,6 +8,16 @@ import { ICON_PATH } from "@/constants/icon";
 const NOTIFICATION_TITLE = "今日のこころの記録をしましょう";
 const NOTIFICATION_BODY = "今日はまだワークシートの記録がありません。気持ちを振り返る時間を作りましょう 💙";
 
+// このエラーコードで失敗したトークンは再送しても届かないため、user_settings から消す。
+// - registration-token-not-registered: 失効した・アプリ側で削除された（deleteToken 済みなど）
+// - invalid-registration-token: トークンの形式が不正（保存時に壊れた値など）
+// messaging/invalid-argument は含めない。ペイロード側の不備でも返るため、
+// 含めると送信処理のバグ 1 つで全ユーザーのトークンが消えてしまう。
+const INVALID_TOKEN_ERROR_CODES = new Set([
+    "messaging/registration-token-not-registered",
+    "messaging/invalid-registration-token",
+]);
+
 // タイミング攻撃を避けるため CRON_SECRET は定数時間で比較する
 function safeEqual(a: string, b: string): boolean {
     const bufA = Buffer.from(a);
@@ -94,7 +104,7 @@ async function handleSend(req: NextRequest) {
                 } catch (error: unknown) {
                     const errCode = (error as { errorInfo?: { code?: string } })?.errorInfo?.code;
                     // トークンが無効になった場合は後でクリーンアップするためリストに追加
-                    if (errCode === "messaging/registration-token-not-registered") {
+                    if (errCode && INVALID_TOKEN_ERROR_CODES.has(errCode)) {
                         invalidTokens.push(userId);
                     } else {
                         failed++;
