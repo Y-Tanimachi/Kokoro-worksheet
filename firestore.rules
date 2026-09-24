@@ -1,9 +1,50 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // ユーザーデータ: 自分のドキュメントのみ読み書き可能（他ユーザーのデータへはアクセス不可）
-    match /users/{userId}/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+    // ワークシート記録: 自分の記録のみ読み書き可能（他ユーザーのデータへはアクセス不可）
+    // アプリが使う users 配下のパスはここだけ。以前は users/{userId}/{document=**} で配下を
+    // 丸ごと許可していたが、ルールは 1 つでも allow が当たれば通るため、スキーマ検証を
+    // 効かせるにはパスを限定する必要がある（他のパスは default deny）。
+    match /users/{userId}/entries/{entryId} {
+      // 1 テキスト項目の上限。src/constants/worksheet.ts の MAX_FIELD_LENGTH と揃えること
+      function isText(value) {
+        return value is string && value.size() <= 300;
+      }
+
+      // WorksheetEntry 型（src/types/index.ts）と同じ形か。
+      // 既存の記録は作成後に更新されないため、ルールを厳しくしても既存データの閲覧・削除には影響しない。
+      function isValidEntry() {
+        let data = request.resource.data;
+        return data.keys().hasAll(['id', 'createdAt', 'trigger', 'emotions', 'emotionStrength',
+            'automaticThought', 'alternativeThought', 'reaction', 'reflection', 'nextStep', 'praise'])
+          && data.keys().hasOnly(['id', 'createdAt', 'trigger', 'emotions', 'emotionStrength',
+            'automaticThought', 'alternativeThought', 'reaction', 'reflection', 'nextStep', 'praise',
+            'aiMessage'])
+          // ドキュメント ID と本文の id が食い違うと、一覧から詳細へ遷移できなくなる
+          && data.id == entryId
+          // JST 壁時計形式（ADR-0004）。形式が崩れると文字列比較による通知判定・集計がずれる
+          && data.createdAt is string
+          && data.createdAt.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}')
+          && isText(data.trigger) && data.trigger.size() > 0
+          && data.emotions is list
+          && data.emotions.size() > 0
+          && data.emotions.hasOnly(['怒り', '悲しみ', '喜び', '不安', '疲労', '無力感', '愛情', 'その他'])
+          && data.emotionStrength is number
+          && data.emotionStrength >= 1 && data.emotionStrength <= 10
+          && isText(data.automaticThought)
+          && isText(data.alternativeThought)
+          && isText(data.reaction)
+          && isText(data.reflection)
+          && isText(data.nextStep)
+          && isText(data.praise)
+          // AI メッセージはサーバーが 80 文字に切り詰めて返す。定型文も含めて余裕を持たせた上限
+          && (!('aiMessage' in data) || (data.aiMessage is string && data.aiMessage.size() <= 200));
+      }
+
+      allow read, delete: if request.auth != null && request.auth.uid == userId;
+      allow create, update: if request.auth != null
+        && request.auth.uid == userId
+        && isValidEntry();
     }
     // レートリミット用コレクション: クライアントからの直接アクセスを完全に禁止し、
     // サーバーサイド（Admin SDK 経由の /api/ai-message）のみが書き込める

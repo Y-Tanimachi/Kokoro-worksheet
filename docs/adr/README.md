@@ -32,6 +32,7 @@ ADR-0001 から ADR-0011 は **事後記録** です。決定した当時に書�
 | [0014](0014-detach-fcm-token-on-logout.md) | ログアウト時に端末の FCM トークンを破棄してアカウントから切り離す | Accepted |
 | [0015](0015-worksheet-field-length-limit.md) | ワークシートのテキスト項目を 1 項目 300 文字までに制限する | Accepted |
 | [0016](0016-surface-entry-fetch-errors.md) | 記録の取得失敗を「記録なし」と区別して表示する | Accepted |
+| [0017](0017-validate-entry-schema-in-rules.md) | ワークシート記録のスキーマを Firestore ルールで検証する | Accepted |
 
 ## 現在のバージョン（2026-08-03 時点）
 
