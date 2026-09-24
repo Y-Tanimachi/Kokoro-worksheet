@@ -9,6 +9,10 @@ import {
     onAuthStateChanged
 } from "firebase/auth";
 import { auth } from "@/utils/firebase";
+import { detachDeviceToken } from "@/utils/notifications";
+
+// ログアウト時の通知トークン切り離しを待つ上限。これを超えたらログアウトを優先する
+const DETACH_TIMEOUT_MS = 5000;
 
 // アプリ全体で認証状態を共有するためのContext型定義
 interface AuthContextType {
@@ -55,6 +59,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     const signOut = async () => {
+        // ログアウト後にこの端末へリマインダーが届かないよう、認証が有効なうちに通知トークンを切り離す。
+        // 失敗してもログアウト自体は止めない（トークンが残っても送信時の自動クリーンアップで回収される）。
+        // オフラインだと Firestore の書き込みはサーバー応答まで resolve しないため、時間で打ち切る
+        if (auth.currentUser) {
+            try {
+                await Promise.race([
+                    detachDeviceToken(auth.currentUser.uid),
+                    new Promise<void>((_, reject) =>
+                        setTimeout(() => reject(new Error("timeout")), DETACH_TIMEOUT_MS)
+                    ),
+                ]);
+            } catch (error) {
+                console.error("Failed to detach notification token", error);
+            }
+        }
         try {
             await firebaseSignOut(auth);
         } catch (error) {
